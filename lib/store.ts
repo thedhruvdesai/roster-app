@@ -34,6 +34,8 @@ interface RosterState {
   addShift: (s: ShiftInput) => string;
   updateShift: (id: string, patch: Partial<ShiftInput>) => void;
   deleteShift: (id: string) => void;
+  /** Puts a deleted shift back (for Undo) */
+  restoreShift: (shift: Shift) => void;
   duplicateShift: (id: string, dayOffset?: number) => string | null;
   setShiftStatus: (ids: string[], status: PaymentStatus) => void;
 
@@ -91,6 +93,11 @@ export const useRoster = create<RosterState>()(
             skipped: sh?.recurringId ? [...s.skipped, skipKey(sh.recurringId, sh.date)] : s.skipped,
           };
         }),
+      restoreShift: (shift) =>
+        set((s) => ({
+          shifts: s.shifts.some((x) => x.id === shift.id) ? s.shifts : [...s.shifts, shift],
+          skipped: shift.recurringId ? s.skipped.filter((k) => k !== skipKey(shift.recurringId!, shift.date)) : s.skipped,
+        })),
       duplicateShift: (id, dayOffset = 1) => {
         const src = get().shifts.find((x) => x.id === id);
         if (!src) return null;

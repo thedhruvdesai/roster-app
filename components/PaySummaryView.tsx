@@ -22,6 +22,7 @@ import {
   shiftsInRange,
 } from "@/lib/pay";
 import { useRoster } from "@/lib/store";
+import { setStatusWithToast } from "@/lib/actions";
 import type { ISODate, PaymentStatus, Shift } from "@/lib/types";
 import { PAYMENT_STATUS_LABEL } from "@/lib/types";
 import { STATUS_STYLE, cn } from "@/lib/ui";
@@ -30,7 +31,7 @@ import { Button, EmployerBadge, EmptyState, Panel, WeekNavigator, inputCls } fro
 type Mode = "week" | "fortnight" | "custom";
 
 export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
-  const { shifts, employers, weekStart, setWeek, setShiftStatus, weekNotes, setWeekNote, ensureRecurring } = useRoster();
+  const { shifts, employers, weekStart, setWeek, weekNotes, setWeekNote, ensureRecurring } = useRoster();
 
   const [mode, setMode] = useState<Mode>("week");
   const [custom, setCustom] = useState({ from: addDays(weekStart, -7), to: addDays(weekStart, 6) });
@@ -112,7 +113,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
           <p className="text-sm text-amber-200">
             {overdue.length} finished shift{overdue.length > 1 ? "s are" : " is"} still marked <b>Scheduled</b>.
           </p>
-          <Button size="sm" variant="outline" onClick={() => setShiftStatus(overdue.map((s) => s.id), "worked")}>
+          <Button size="sm" variant="outline" onClick={() => setStatusWithToast(overdue.map((s) => s.id), "worked")}>
             <Check size={14} /> Mark as worked
           </Button>
         </div>
@@ -150,7 +151,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-3">
                       <StatusBar paid={l.paid} pending={l.pending} scheduled={l.scheduled} slim />
-                      <Button size="sm" variant="ghost" disabled={!workedIds.length} onClick={() => setShiftStatus(workedIds, "paid")}>
+                      <Button size="sm" variant="ghost" disabled={!workedIds.length} onClick={() => setStatusWithToast(workedIds, "paid")}>
                         <Banknote size={13} /> Mark paid
                       </Button>
                     </div>
@@ -194,7 +195,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                           <StatusBar paid={l.paid} pending={l.pending} scheduled={l.scheduled} slim />
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <Button size="sm" variant="ghost" disabled={!workedIds.length} onClick={() => setShiftStatus(workedIds, "paid")}>
+                          <Button size="sm" variant="ghost" disabled={!workedIds.length} onClick={() => setStatusWithToast(workedIds, "paid")}>
                             <Banknote size={13} /> Mark paid
                           </Button>
                         </td>
@@ -276,7 +277,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                             <td className="px-3 py-2.5 text-right tabular-nums text-zinc-400">${s.hourlyRate.toFixed(2)}</td>
                             <td className="px-3 py-2.5 text-right font-display text-lg font-semibold text-zinc-50">{fmtMoney(c.pay)}</td>
                             <td className="px-4 py-2.5">
-                              <StatusSelect status={s.status} onChange={(st) => setShiftStatus([s.id], st)} />
+                              <StatusSelect status={s.status} onChange={(st) => setStatusWithToast([s.id], st)} />
                             </td>
                           </tr>
                         );
@@ -305,7 +306,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                           </div>
                         </div>
                         <div className="mt-2">
-                          <StatusSelect status={s.status} onChange={(st) => setShiftStatus([s.id], st)} />
+                          <StatusSelect status={s.status} onChange={(st) => setStatusWithToast([s.id], st)} />
                         </div>
                       </li>
                     );

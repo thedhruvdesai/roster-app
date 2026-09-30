@@ -1,7 +1,8 @@
 "use client";
 
 import { CalendarPlus, Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { deleteShiftWithUndo, duplicateShiftToNextDay, setStatusWithToast } from "@/lib/actions";
 import { addDays, fmtDayNum, fmtDow, parseISODate, todayISO, weekDays } from "@/lib/dates";
 import { calcShift, findRestWarnings, fmtHours, fmtMoney, shiftsInRange } from "@/lib/pay";
 import { useRoster } from "@/lib/store";
@@ -52,7 +53,8 @@ function useNow() {
 
 /** Mon–Sun as 24-hour duty strips, with the shift tickets underneath each day. */
 export function WeeklyRosterView({ onAdd, onEdit }: Props) {
-  const { shifts, employers, weekStart, setWeek, deleteShift, duplicateShift, setShiftStatus } = useRoster();
+  const { shifts, employers, weekStart, setWeek } = useRoster();
+  const touch = useRef<{ x: number; y: number } | null>(null);
   const days = weekDays(weekStart);
   const today = todayISO();
   const now = useNow();
@@ -99,13 +101,28 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
   }, [shifts, employers, weekStart]);
 
   return (
-    <section className="space-y-4" aria-label="Weekly roster">
+    <section
+      className="space-y-4"
+      aria-label="Weekly roster"
+      // Swipe left / right to change week on touch screens
+      onTouchStart={(e) => (touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY })}
+      onTouchEnd={(e) => {
+        const t = touch.current;
+        touch.current = null;
+        if (!t) return;
+        const dx = e.changedTouches[0].clientX - t.x;
+        const dy = e.changedTouches[0].clientY - t.y;
+        if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.8) setWeek(addDays(weekStart, dx < 0 ? 7 : -7));
+      }}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <WeekNavigator weekStart={weekStart} onChange={setWeek} />
-        <Button variant="primary" onClick={() => onAdd(days.includes(today) ? today : days[0])}>
+        <Button variant="primary" className="hidden md:inline-flex" onClick={() => onAdd(days.includes(today) ? today : days[0])}>
           <Plus size={16} strokeWidth={2.5} /> Add shift
         </Button>
       </div>
+
+      <WeekGlance rows={data.rows} today={today} empById={data.empById} />
 
       {data.weekCount === 0 && (
         <EmptyState
@@ -150,8 +167,9 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
             return (
               <li
                 key={r.date}
+                id={`day-${r.date}`}
                 className={cn(
-                  "border-b border-zinc-800 px-3 py-3 last:border-b-0 md:px-4",
+                  "scroll-mt-20 border-b border-zinc-800 px-3 py-3 last:border-b-0 md:px-4",
                   isToday && "bg-zinc-800/40"
                 )}
               >
@@ -166,6 +184,7 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
 
                   {/* Mobile totals + add */}
                   <div className="flex items-center gap-2 md:hidden">
+                    {r.own.length === 0 && r.segments.length === 0 && <span className="text-sm text-zinc-600">Day off</span>}
                     {r.own.length > 0 && (
                       <span className="font-display text-base text-zinc-300">
                         {fmtHours(r.hours)} <span className="text-zinc-500">/</span> {fmtMoney(r.pay)}
@@ -175,7 +194,7 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
                   </div>
 
                   {/* 24h strip */}
-                  <div className="col-span-2 md:col-span-1">
+                  <div className={cn("col-span-2 md:col-span-1", r.segments.length === 0 && "hidden md:block")}>
                     <DayStrip segments={r.segments} gaps={r.gaps} nowPct={nowPct} onEdit={onEdit} />
                   </div>
 
@@ -202,9 +221,9 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
                         employer={data.empById.get(s.employerId)}
                         restWarning={data.restByShift.get(s.id)}
                         onEdit={() => onEdit(s)}
-                        onDuplicate={() => duplicateShift(s.id, 1)}
-                        onDelete={() => deleteShift(s.id)}
-                        onMarkWorked={() => setShiftStatus([s.id], "worked")}
+                        onDuplicate={() => duplicateShiftToNextDay(s.id)}
+                        onDelete={() => deleteShiftWithUndo(s.id)}
+                        onMarkWorked={() => setStatusWithToast([s.id], "worked")}
                       />
                     ))}
                   </div>
@@ -318,6 +337,49 @@ function Legend() {
         <span className="h-3 w-0.5 rounded-full bg-vest" />
         Now
       </span>
+    </div>
+  );
+}
+
+type Row = { date: ISODate; own: Shift[]; hours: number };
+
+/** Phone-only 7-day overview: tap a day to jump to it. */
+function WeekGlance({ rows, today, empById }: { rows: Row[]; today: ISODate; empById: Map<string, Employer> }) {
+  const max = Math.max(12, ...rows.map((r) => r.hours));
+  return (
+    <div className="grid grid-cols-7 gap-1 md:hidden">
+      {rows.map((r) => {
+        const isToday = r.date === today;
+        return (
+          <button
+            key={r.date}
+            onClick={() => document.getElementById(`day-${r.date}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className={cn(
+              "flex flex-col items-center rounded-lg border px-0.5 pb-1.5 pt-1.5",
+              isToday ? "border-vest/60 bg-vest/10" : "border-zinc-800 bg-zinc-900"
+            )}
+            aria-label={`${fmtDow(r.date)} ${fmtDayNum(r.date)}, ${r.own.length} shifts`}
+          >
+            <span className={cn("text-xs", isToday ? "text-vest" : "text-zinc-400")}>{fmtDow(r.date).slice(0, 2)}</span>
+            <span className={cn("font-display text-xl font-semibold leading-tight", isToday ? "text-vest" : r.own.length ? "text-zinc-50" : "text-zinc-600")}>
+              {fmtDayNum(r.date)}
+            </span>
+            <span className="mt-1 flex h-8 w-2.5 flex-col-reverse overflow-hidden rounded-full bg-zinc-800">
+              {r.own.map((s) => {
+                const e = empById.get(s.employerId);
+                return (
+                  <span
+                    key={s.id}
+                    className={e ? BADGE[e.color].bar : "bg-zinc-500"}
+                    style={{ height: `${(calcShift(s).netHours / max) * 100}%` }}
+                  />
+                );
+              })}
+            </span>
+            <span className="mt-1 font-display text-xs text-zinc-400">{r.own.length ? fmtHours(r.hours) : "–"}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

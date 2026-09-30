@@ -10,9 +10,12 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "ShiftDesk — Roster & Pay",
   description: "Personal roster, fatigue and pay tracker for casual security work across multiple employers.",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/favicon.png", apple: "/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "ShiftDesk", statusBarStyle: "black-translucent" },
 };
 
-export const viewport: Viewport = { themeColor: "#0d1822", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#0d1822", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

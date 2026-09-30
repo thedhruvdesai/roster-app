@@ -12,6 +12,8 @@ import {
   fmtMoney,
 } from "@/lib/pay";
 import { resolveRate, useRoster } from "@/lib/store";
+import { deleteShiftWithUndo } from "@/lib/actions";
+import { toast } from "@/lib/toast";
 import type { ISODate, PaymentStatus, Shift } from "@/lib/types";
 import { PAYMENT_STATUS_LABEL } from "@/lib/types";
 import { BADGE, cn } from "@/lib/ui";
@@ -40,7 +42,7 @@ const BREAK_PRESETS = [0, 15, 30, 45, 60];
 const STATUSES: PaymentStatus[] = ["scheduled", "worked", "paid"];
 
 export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
-  const { employers, shifts, addShift, updateShift, deleteShift } = useRoster();
+  const { employers, shifts, recurring, addShift, updateShift } = useRoster();
   const active = employers.filter((e) => !e.archived || e.id === shift?.employerId);
   const [rateTouched, setRateTouched] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -103,6 +105,31 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
   }, [open, onClose]);
 
   const employer = employers.find((e) => e.id === d.employerId);
+
+  // Quick-fill: fixed roster patterns first, then recent distinct one-off shifts
+  const presets = useMemo(() => {
+    type P = { key: string; employerId: string; site: string; start: string; end: string; breakMins: number; rate: number };
+    const out: P[] = [];
+    const seen = new Set<string>();
+    const push = (p: Omit<P, "key">) => {
+      const key = `${p.employerId}|${p.site}|${p.start}|${p.end}`;
+      if (seen.has(key) || !employers.some((e) => e.id === p.employerId && !e.archived)) return;
+      seen.add(key);
+      out.push({ ...p, key });
+    };
+    recurring.filter((r) => r.active).forEach((r) =>
+      push({ employerId: r.employerId, site: r.site, start: r.start, end: r.end, breakMins: r.breakMins, rate: r.hourlyRate ?? resolveRate(employers, r.employerId, r.site) })
+    );
+    [...shifts].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 30).forEach((x) =>
+      push({ employerId: x.employerId, site: x.site, start: x.start, end: x.end, breakMins: x.breakMins, rate: x.hourlyRate })
+    );
+    return out.slice(0, 8);
+  }, [recurring, shifts, employers]);
+
+  const applyPreset = (p: (typeof presets)[number]) => {
+    setRateTouched(true);
+    setD((prev) => ({ ...prev, employerId: p.employerId, site: p.site, start: p.start, end: p.end, breakMins: String(p.breakMins), hourlyRate: String(p.rate) }));
+  };
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) =>
     setD((prev) => {
@@ -180,8 +207,13 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
       status: d.status,
       notes: d.notes.trim() || undefined,
     };
-    if (shift) updateShift(shift.id, payload);
-    else addShift(payload);
+    if (shift) {
+      updateShift(shift.id, payload);
+      toast("Shift updated");
+    } else {
+      addShift(payload);
+      toast(`Added ${fmtDow(payload.date)} ${payload.start}–${payload.end}`);
+    }
     onClose();
   };
 
@@ -190,16 +222,17 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="shift-modal-title">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="backdrop-in absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       <form
         onSubmit={(e) => {
           e.preventDefault();
           save();
         }}
-        className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:rounded-xl"
+        className="sheet-in pb-safe relative flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:rounded-xl sm:pb-0"
       >
-        <header className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+        <span className="mx-auto mt-2 h-1 w-10 rounded-full bg-zinc-700 sm:hidden" aria-hidden />
+        <header className="flex items-center justify-between border-b border-zinc-800 px-5 py-3 sm:py-4">
           <div>
             <h2 id="shift-modal-title" className="font-display text-2xl font-semibold text-zinc-50">
               {shift ? "Edit shift" : "New shift"}
@@ -215,6 +248,37 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
         </header>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+          {!shift && presets.length > 0 && (
+            <div>
+              <p className="mb-1.5 text-sm font-medium text-zinc-300">Quick fill</p>
+              <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1">
+                {presets.map((p) => {
+                  const e = employers.find((x) => x.id === p.employerId);
+                  const on = d.employerId === p.employerId && d.site === p.site && d.start === p.start && d.end === p.end;
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => applyPreset(p)}
+                      className={cn(
+                        "flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors",
+                        on ? "border-vest bg-vest/10" : "border-zinc-700 hover:border-zinc-500"
+                      )}
+                    >
+                      {e && <span className={cn("h-7 w-1 rounded-full", BADGE[e.color].bar)} />}
+                      <span>
+                        <span className="block font-display text-base font-semibold leading-tight text-zinc-50">
+                          {e?.code} {p.start}–{p.end}
+                        </span>
+                        <span className="block max-w-[11rem] truncate text-xs text-zinc-400">{p.site}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Employer" error={err("employerId")}>
               <select ref={firstRef} className={inputCls} value={d.employerId} onChange={(e) => set("employerId", e.target.value)}>
@@ -374,7 +438,7 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
               type="button"
               variant="danger"
               onClick={() => {
-                deleteShift(shift.id);
+                deleteShiftWithUndo(shift.id);
                 onClose();
               }}
             >

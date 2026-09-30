@@ -69,6 +69,14 @@ Employers & Sites → **Fixed weekly roster**. Each pattern (employer, site, day
 
 Starting values live in `lib/mock.ts`.
 
+## Using it on your phone
+
+- **Install it:** open the site in Chrome (Android) → menu → *Add to Home screen*, or Safari (iPhone) → Share → *Add to Home Screen*. It opens full-screen like an app.
+- Bottom tab bar, a floating **Add shift** button, and a 7-day overview you can tap to jump to a day.
+- Swipe left or right on the roster to change week.
+- **Quick fill** in the shift form: one tap fills a shift from your fixed roster or recent shifts.
+- Deleting a shift, copying it, or changing its pay status shows a confirmation with **Undo**.
+
 ## Payment status flow
 
 `Scheduled` → `Worked / Pending Pay` → `Paid`
@@ -90,4 +98,4 @@ Pay tab → Timesheet export. Pick one employer or all, toggle $ amounts and not
 - Penalty rates (Sat / Sun / public holiday / night loadings) as per-employer multipliers
 - Import JSON backup, and sync via Supabase for multi-device use
 - ICS export so shifts land in your phone calendar
-- PWA manifest + offline cache for "add to home screen"
+- Offline cache (service worker) so it opens with no signal
