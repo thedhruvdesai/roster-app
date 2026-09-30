@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: dark; }
+html, body { background: #09090b; }
+body { -webkit-tap-highlight-color: transparent; }
+::selection { background: rgb(113 113 122 / 0.5); }
+/* Slim dark scrollbars */
+* { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
