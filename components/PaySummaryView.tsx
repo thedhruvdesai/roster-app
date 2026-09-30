@@ -74,8 +74,8 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                 key={m}
                 onClick={() => setMode(m)}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors",
-                  mode === m ? "bg-zinc-100 text-zinc-900" : "text-zinc-400 hover:text-zinc-100"
+                  "rounded-md px-3 py-1.5 text-sm font-medium capitalize transition-colors",
+                  mode === m ? "bg-vest text-vest-ink" : "text-zinc-400 hover:text-zinc-100"
                 )}
               >
                 {m === "custom" ? "Date range" : m}
@@ -98,7 +98,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
       </div>
 
       {/* ── KPIs ──────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-zinc-800 bg-zinc-800 lg:grid-cols-4">
         <Kpi icon={<Wallet size={14} />} label="Gross projected" value={fmtMoney(summary.grossProjected)} sub={`${fmtHours(summary.totalHours)} across ${summary.shiftCount} shifts`} />
         <Kpi icon={<CheckCheck size={14} />} label="Verified / completed" value={fmtMoney(summary.verified)} sub="Worked + paid shifts" tone="emerald" />
         <Kpi icon={<Hourglass size={14} />} label="Worked, awaiting pay" value={fmtMoney(summary.pendingPay)} sub="Chase if overdue" tone="amber" />
@@ -129,11 +129,42 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
           {/* ── By employer ─────────────────────────────── */}
           <Panel>
             <div className="border-b border-zinc-800 px-4 py-3">
-              <h3 className="text-sm font-semibold text-zinc-100">By employer</h3>
+              <h3 className="font-display text-xl font-semibold text-zinc-50">By employer</h3>
             </div>
-            <div className="overflow-x-auto">
+            {/* Mobile: one row per employer */}
+            <ul className="divide-y divide-zinc-800 md:hidden">
+              {summary.byEmployer.map((l) => {
+                const workedIds = shiftsInRange(shifts, from, to)
+                  .filter((x) => x.employerId === l.employer.id && x.status === "worked")
+                  .map((x) => x.id);
+                return (
+                  <li key={l.employer.id} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <EmployerBadge employer={l.employer} />
+                        <p className="mt-1 text-sm text-zinc-400">
+                          {l.shiftCount} shift{l.shiftCount === 1 ? "" : "s"}, {fmtHours(l.hours)} at {l.rates.map((r) => `$${r.toFixed(2)}`).join(" / ")}
+                        </p>
+                      </div>
+                      <p className="shrink-0 font-display text-xl font-semibold text-zinc-50">{fmtMoney(l.total)}</p>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-3">
+                      <StatusBar paid={l.paid} pending={l.pending} scheduled={l.scheduled} slim />
+                      <Button size="sm" variant="ghost" disabled={!workedIds.length} onClick={() => setShiftStatus(workedIds, "paid")}>
+                        <Banknote size={13} /> Mark paid
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
+              <li className="flex justify-between px-4 py-3 font-display text-lg font-semibold">
+                <span className="text-zinc-300">Total {fmtHours(summary.totalHours)}</span>
+                <span className="text-vest">{fmtMoney(summary.grossProjected)}</span>
+              </li>
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[640px] text-sm">
-                <thead className="text-left text-[11px] uppercase tracking-wide text-zinc-500">
+                <thead className="text-left text-sm text-zinc-400">
                   <tr>
                     <th className="px-4 py-2 font-medium">Company</th>
                     <th className="px-3 py-2 text-right font-medium">Shifts</th>
@@ -153,12 +184,12 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                       <tr key={l.employer.id} className="hover:bg-zinc-800/30">
                         <td className="px-4 py-3">
                           <EmployerBadge employer={l.employer} />
-                          <p className="mt-0.5 text-[11px] capitalize text-zinc-500">{l.employer.payCycle} pay</p>
+                          <p className="mt-0.5 text-xs capitalize text-zinc-500">{l.employer.payCycle} pay</p>
                         </td>
                         <td className="px-3 py-3 text-right tabular-nums text-zinc-300">{l.shiftCount}</td>
                         <td className="px-3 py-3 text-right tabular-nums text-zinc-300">{fmtHours(l.hours)}</td>
                         <td className="px-3 py-3 text-right tabular-nums text-zinc-400">{l.rates.map((r) => `$${r.toFixed(2)}`).join(" / ")}</td>
-                        <td className="px-3 py-3 text-right font-semibold tabular-nums text-zinc-50">{fmtMoney(l.total)}</td>
+                        <td className="px-3 py-3 text-right font-display text-lg font-semibold text-zinc-50">{fmtMoney(l.total)}</td>
                         <td className="px-3 py-3">
                           <StatusBar paid={l.paid} pending={l.pending} scheduled={l.scheduled} slim />
                         </td>
@@ -177,7 +208,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                     <td className="px-3 py-3 text-right tabular-nums text-zinc-300">{summary.shiftCount}</td>
                     <td className="px-3 py-3 text-right tabular-nums text-zinc-300">{fmtHours(summary.totalHours)}</td>
                     <td />
-                    <td className="px-3 py-3 text-right font-semibold tabular-nums text-emerald-300">{fmtMoney(summary.grossProjected)}</td>
+                    <td className="px-3 py-3 text-right font-display text-lg font-semibold text-vest">{fmtMoney(summary.grossProjected)}</td>
                     <td colSpan={2} />
                   </tr>
                 </tfoot>
@@ -188,15 +219,15 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
           {/* ── Itemised ledger ─────────────────────────── */}
           <Panel>
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 px-4 py-3">
-              <h3 className="text-sm font-semibold text-zinc-100">Shift ledger</h3>
+              <h3 className="font-display text-xl font-semibold text-zinc-50">Shift ledger</h3>
               <div className="flex gap-2">
-                <select className={cn(inputCls, "h-8 w-auto text-xs")} value={empFilter} onChange={(e) => setEmpFilter(e.target.value)}>
+                <select className={cn(inputCls, "h-9 w-auto text-sm")} value={empFilter} onChange={(e) => setEmpFilter(e.target.value)}>
                   <option value="all">All employers</option>
                   {summary.byEmployer.map((l) => (
                     <option key={l.employer.id} value={l.employer.id}>{l.employer.name}</option>
                   ))}
                 </select>
-                <select className={cn(inputCls, "h-8 w-auto text-xs")} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as PaymentStatus | "all")}>
+                <select className={cn(inputCls, "h-9 w-auto text-sm")} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as PaymentStatus | "all")}>
                   <option value="all">All statuses</option>
                   {(["scheduled", "worked", "paid"] as PaymentStatus[]).map((s) => (
                     <option key={s} value={s}>{PAYMENT_STATUS_LABEL[s]}</option>
@@ -212,7 +243,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                 {/* Desktop table */}
                 <div className="hidden overflow-x-auto md:block">
                   <table className="w-full text-sm">
-                    <thead className="text-left text-[11px] uppercase tracking-wide text-zinc-500">
+                    <thead className="text-left text-sm text-zinc-400">
                       <tr>
                         <th className="px-4 py-2 font-medium">Date</th>
                         <th className="px-3 py-2 font-medium">Venue</th>
@@ -232,18 +263,18 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                               <span className="text-zinc-500">{fmtDow(s.date)}</span> {fmtAU(s.date)}
                             </td>
                             <td className="px-3 py-2.5">
-                              <button onClick={() => onEdit(s)} className="text-left hover:underline">
-                                <span className="block text-zinc-100">{s.site}</span>
+                              <button onClick={() => onEdit(s)} className="mb-1 block text-left text-zinc-100 hover:text-vest">
+                                {s.site}
                               </button>
                               <EmployerBadge employer={empById(s.employerId)} compact />
                             </td>
-                            <td className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-zinc-400">
+                            <td className="whitespace-nowrap px-3 py-2.5 font-display text-base text-zinc-200">
                               {s.start}–{s.end}
-                              {c.overnight && <span className="ml-1 text-indigo-300">+1</span>}
+                              {c.overnight && <span className="ml-1 text-sm text-indigo-300">next day</span>}
                             </td>
                             <td className="px-3 py-2.5 text-right tabular-nums text-zinc-300">{fmtHours(c.netHours)}</td>
                             <td className="px-3 py-2.5 text-right tabular-nums text-zinc-400">${s.hourlyRate.toFixed(2)}</td>
-                            <td className="px-3 py-2.5 text-right font-medium tabular-nums text-zinc-50">{fmtMoney(c.pay)}</td>
+                            <td className="px-3 py-2.5 text-right font-display text-lg font-semibold text-zinc-50">{fmtMoney(c.pay)}</td>
                             <td className="px-4 py-2.5">
                               <StatusSelect status={s.status} onChange={(st) => setShiftStatus([s.id], st)} />
                             </td>
@@ -270,7 +301,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                           </button>
                           <div className="shrink-0 text-right">
                             <p className="font-semibold tabular-nums text-zinc-50">{fmtMoney(c.pay)}</p>
-                            <p className="text-[11px] tabular-nums text-zinc-500">{fmtHours(c.netHours)} × ${s.hourlyRate.toFixed(2)}</p>
+                            <p className="text-xs tabular-nums text-zinc-500">{fmtHours(c.netHours)} × ${s.hourlyRate.toFixed(2)}</p>
                           </div>
                         </div>
                         <div className="mt-2">
@@ -290,7 +321,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel className="p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100">
+            <h3 className="flex items-center gap-2 font-display text-xl font-semibold text-zinc-50">
               <FileText size={15} /> Pay notes
             </h3>
             <label className="flex cursor-pointer items-center gap-2 text-xs text-zinc-400">
@@ -308,7 +339,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
             initial={note?.text ?? ""}
             onSave={(text) => setWeekNote(noteKey, { text })}
           />
-          <p className="mt-2 text-[11px] text-zinc-500">
+          <p className="mt-2 text-xs text-zinc-500">
             Saved for the period starting {fmtAU(noteKey)}
             {note?.updatedAt ? ` · last edited ${new Date(note.updatedAt).toLocaleString("en-AU", { dateStyle: "short", timeStyle: "short" })}` : ""}
           </p>
@@ -324,11 +355,11 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
 
 function Kpi({ icon, label, value, sub, tone }: { icon: ReactNode; label: string; value: string; sub: string; tone?: "emerald" | "amber" }) {
   return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-      <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+    <div className="bg-zinc-900 p-4">
+      <p className="flex items-center gap-1.5 text-sm text-zinc-400">
         {icon} {label}
       </p>
-      <p className={cn("mt-1 text-xl font-semibold tabular-nums sm:text-2xl", tone === "emerald" ? "text-emerald-300" : tone === "amber" ? "text-amber-300" : "text-zinc-50")}>
+      <p className={cn("mt-1 font-display text-3xl font-semibold leading-tight", tone === "emerald" ? "text-emerald-300" : tone === "amber" ? "text-amber-300" : "text-zinc-50")}>
         {value}
       </p>
       <p className="mt-0.5 text-xs text-zinc-500">{sub}</p>
@@ -349,7 +380,7 @@ function StatusBar({ paid, pending, scheduled, slim }: { paid: number; pending: 
         {seg.map((s) => s.v > 0 && <div key={s.l} className={s.c} style={{ width: `${(s.v / total) * 100}%` }} title={`${s.l}: ${fmtMoney(s.v)}`} />)}
       </div>
       {!slim && (
-        <div className="mt-1.5 flex flex-wrap gap-4 text-[11px] text-zinc-500">
+        <div className="mt-1.5 flex flex-wrap gap-4 text-xs text-zinc-500">
           {seg.map((s) => (
             <span key={s.l} className="flex items-center gap-1.5">
               <span className={cn("h-2 w-2 rounded-full", s.c)} /> {s.l} {fmtMoney(s.v)}
@@ -369,7 +400,7 @@ function StatusSelect({ status, onChange }: { status: PaymentStatus; onChange: (
           key={s}
           onClick={() => onChange(s)}
           className={cn(
-            "rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors",
+            "rounded-full px-2 py-0.5 text-xs font-medium transition-colors",
             status === s ? cn(STATUS_STYLE[s], "ring-1 ring-inset") : "text-zinc-500 hover:text-zinc-300"
           )}
           aria-pressed={status === s}
@@ -433,17 +464,17 @@ function ExportPanel({ from, to, note, disabled }: { from: ISODate; to: ISODate;
   return (
     <Panel className="flex flex-col p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100">
+        <h3 className="flex items-center gap-2 font-display text-xl font-semibold text-zinc-50">
           <ClipboardCopy size={15} /> Timesheet export
         </h3>
-        <select className={cn(inputCls, "h-8 w-auto text-xs")} value={emp} onChange={(e) => setEmp(e.target.value)}>
+        <select className={cn(inputCls, "h-9 w-auto text-sm")} value={emp} onChange={(e) => setEmp(e.target.value)}>
           <option value="all">All employers</option>
           {inRange.map((e) => (
             <option key={e.id} value={e.id}>{e.name}</option>
           ))}
         </select>
       </div>
-      <pre className="max-h-56 flex-1 overflow-auto whitespace-pre-wrap rounded-lg border border-zinc-800 bg-zinc-950 p-3 font-mono text-[11.5px] leading-relaxed text-zinc-300">
+      <pre className="max-h-56 flex-1 overflow-auto whitespace-pre-wrap rounded-lg border border-zinc-800 bg-zinc-950 p-3 font-sans text-[13px] leading-relaxed text-zinc-300">
         {text}
       </pre>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">

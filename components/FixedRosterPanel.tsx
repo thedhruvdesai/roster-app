@@ -35,7 +35,7 @@ export function FixedRosterPanel() {
     <Panel className="p-4">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100">
+          <h3 className="flex items-center gap-2 font-display text-xl font-semibold text-zinc-50">
             <Repeat size={15} /> Fixed weekly roster
           </h3>
           <p className="mt-0.5 text-xs text-zinc-500">
@@ -67,22 +67,22 @@ export function FixedRosterPanel() {
                         <span
                           key={d}
                           className={cn(
-                            "rounded px-1 text-[10px] font-semibold",
-                            r.weekdays.includes(i as Weekday) ? "bg-zinc-100 text-zinc-900" : "text-zinc-600"
+                            "flex h-5 w-5 items-center justify-center rounded text-xs font-semibold",
+                            r.weekdays.includes(i as Weekday) ? "bg-vest text-vest-ink" : "text-zinc-600"
                           )}
                         >
                           {d[0]}
                         </span>
                       ))}
                     </span>
-                    {!r.active && <span className="text-[11px] text-zinc-500">Paused</span>}
+                    {!r.active && <span className="text-xs text-zinc-500">Paused</span>}
                   </div>
-                  <p className="mt-1 truncate text-sm text-zinc-200">{r.site}</p>
-                  <p className="font-mono text-xs text-zinc-400">
+                  <p className="mt-1 truncate text-[15px] text-zinc-200">{r.site}</p>
+                  <p className="font-display text-lg text-zinc-100">
                     {r.start}–{r.end}
-                    {w.overnight && <span className="ml-1 text-indigo-300">+1</span>}
-                    <span className="ml-2 font-sans text-zinc-500">
-                      {fmtHours(w.hours)}/wk · {fmtMoney(w.pay)}/wk @ ${rate.toFixed(2)}
+                    {w.overnight && <span className="ml-1 text-sm text-indigo-300">next day</span>}
+                    <span className="ml-2 font-sans text-sm text-zinc-400">
+                      {fmtHours(w.hours)} and {fmtMoney(w.pay)} a week at ${rate.toFixed(2)}/h
                     </span>
                   </p>
                 </div>
@@ -184,10 +184,10 @@ function RecurringEditor({ pattern, onClose }: { pattern: RecurringShift | null;
           e.preventDefault();
           save();
         }}
-        className="relative flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:rounded-2xl"
+        className="relative flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:rounded-xl"
       >
         <header className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
-          <h2 className="text-base font-semibold text-zinc-50">{pattern ? "Edit fixed shift" : "New fixed shift"}</h2>
+          <h2 className="font-display text-2xl font-semibold text-zinc-50">{pattern ? "Edit fixed shift" : "New fixed shift"}</h2>
           <IconButton type="button" label="Close" onClick={onClose}>
             <X size={18} />
           </IconButton>
@@ -226,7 +226,7 @@ function RecurringEditor({ pattern, onClose }: { pattern: RecurringShift | null;
                   onClick={() => toggleDay(i as Weekday)}
                   className={cn(
                     "rounded-lg py-2 text-xs font-semibold ring-1 ring-inset transition-colors",
-                    weekdays.includes(i as Weekday) ? "bg-zinc-100 text-zinc-900 ring-zinc-100" : "text-zinc-400 ring-zinc-700 hover:bg-zinc-800"
+                    weekdays.includes(i as Weekday) ? "bg-vest text-vest-ink ring-vest" : "text-zinc-400 ring-zinc-700 hover:bg-zinc-800"
                   )}
                 >
                   {d}

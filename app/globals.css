@@ -3,8 +3,16 @@
 @tailwind utilities;
 
 :root { color-scheme: dark; }
-html, body { background: #09090b; }
-body { -webkit-tap-highlight-color: transparent; }
-::selection { background: rgb(113 113 122 / 0.5); }
-/* Slim dark scrollbars */
-* { scrollbar-width: thin; scrollbar-color: #3f3f46 transparent; }
+html, body { background: #0d1822; }
+body { -webkit-tap-highlight-color: transparent; font-feature-settings: "tnum" 1; }
+::selection { background: rgb(255 210 63 / 0.35); }
+* { scrollbar-width: thin; scrollbar-color: #344755 transparent; }
+:focus-visible { outline: 2px solid #ffd23f; outline-offset: 2px; }
+
+/* Rest-gap hatching on the day timeline */
+.hatch-rest {
+  background-image: repeating-linear-gradient(135deg, rgb(251 113 133 / 0.55) 0 3px, transparent 3px 7px);
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

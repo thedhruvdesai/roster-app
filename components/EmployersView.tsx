@@ -31,7 +31,7 @@ export function EmployersView() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-zinc-50">Employers & sites</h2>
+          <h2 className="font-display text-3xl font-semibold text-zinc-50">Employers & sites</h2>
           <p className="text-sm text-zinc-500">Default rates here pre-fill every new shift. Site overrides win over the employer rate.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -64,8 +64,8 @@ export function EmployersView() {
               <Panel key={e.id} className={cn("flex flex-col p-4", e.archived && "opacity-60")}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <EmployerBadge employer={e} />
-                    <h3 className="mt-2 truncate text-base font-semibold text-zinc-50">{e.name}</h3>
+                    <EmployerBadge employer={e} compact />
+                    <h3 className="mt-2 truncate font-display text-2xl font-semibold text-zinc-50">{e.name}</h3>
                     <p className="text-xs capitalize text-zinc-500">
                       {e.payCycle}{e.paymentType === "cash" ? " cash" : e.paymentType === "invoice" ? " invoice" : " pay"}
                       {e.payDay ? ` · paid ${e.payDay}` : ""} · {total} shift{total === 1 ? "" : "s"}{e.archived ? " · archived" : ""}
@@ -76,7 +76,7 @@ export function EmployersView() {
                   </IconButton>
                 </div>
 
-                <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-zinc-950/60 p-3 text-center">
+                <div className="mt-4 grid grid-cols-3 gap-2 rounded-lg bg-zinc-950 p-3">
                   <Mini label="Base rate" value={`$${e.defaultRate.toFixed(2)}`} />
                   <Mini label="This week" value={line ? fmtHours(line.hours) : "0h"} />
                   <Mini label="Earned" value={line ? fmtMoney(line.total) : "$0"} />
@@ -133,8 +133,8 @@ export function EmployersView() {
 function Mini({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wide text-zinc-500">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold tabular-nums text-zinc-100">{value}</p>
+      <p className="text-xs text-zinc-400">{label}</p>
+      <p className="mt-0.5 font-display text-xl font-semibold text-zinc-50">{value}</p>
     </div>
   );
 }
@@ -212,10 +212,10 @@ function EmployerEditor({ employer, onClose }: { employer: Employer | null; onCl
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <form
         onSubmit={(e) => { e.preventDefault(); save(); }}
-        className="relative flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:rounded-2xl"
+        className="relative flex max-h-[92dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:rounded-xl"
       >
         <header className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
-          <h2 className="text-base font-semibold text-zinc-50">{employer ? "Edit employer" : "New employer"}</h2>
+          <h2 className="font-display text-2xl font-semibold text-zinc-50">{employer ? "Edit employer" : "New employer"}</h2>
           <IconButton type="button" label="Close" onClick={onClose}><X size={18} /></IconButton>
         </header>
 
@@ -237,7 +237,7 @@ function EmployerEditor({ employer, onClose }: { employer: Employer | null; onCl
                   type="button"
                   onClick={() => setColor(c)}
                   aria-label={c}
-                  className={cn("h-8 w-8 rounded-full ring-2 ring-offset-2 ring-offset-zinc-900 transition", BADGE[c].dot, color === c ? "ring-zinc-100" : "ring-transparent opacity-60 hover:opacity-100")}
+                  className={cn("h-8 w-8 rounded-full ring-2 ring-offset-2 ring-offset-zinc-900 transition", BADGE[c].dot, color === c ? "ring-vest" : "ring-transparent opacity-60 hover:opacity-100")}
                 />
               ))}
             </div>

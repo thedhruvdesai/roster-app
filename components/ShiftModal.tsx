@@ -197,11 +197,11 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
           e.preventDefault();
           save();
         }}
-        className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:rounded-2xl"
+        className="relative flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:rounded-xl"
       >
         <header className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
           <div>
-            <h2 id="shift-modal-title" className="text-base font-semibold text-zinc-50">
+            <h2 id="shift-modal-title" className="font-display text-2xl font-semibold text-zinc-50">
               {shift ? "Edit shift" : "New shift"}
             </h2>
             <p className="text-xs text-zinc-500">
@@ -270,8 +270,8 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
                     type="button"
                     onClick={() => set("breakMins", String(b))}
                     className={cn(
-                      "rounded-md px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset transition-colors",
-                      Number(d.breakMins) === b ? "bg-zinc-100 text-zinc-900 ring-zinc-100" : "text-zinc-400 ring-zinc-700 hover:bg-zinc-800"
+                      "rounded-md px-2.5 py-1 text-xs font-semibold ring-1 ring-inset transition-colors",
+                      Number(d.breakMins) === b ? "bg-vest text-vest-ink ring-vest" : "text-zinc-400 ring-zinc-700 hover:bg-zinc-800"
                     )}
                   >
                     {b}m
@@ -314,8 +314,8 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
                   type="button"
                   onClick={() => set("status", s)}
                   className={cn(
-                    "rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
-                    d.status === s ? "bg-zinc-800 text-zinc-50 shadow" : "text-zinc-500 hover:text-zinc-300"
+                    "rounded-md px-2 py-2 text-sm font-medium transition-colors",
+                    d.status === s ? "bg-zinc-700 text-zinc-50" : "text-zinc-400 hover:text-zinc-200"
                   )}
                 >
                   {PAYMENT_STATUS_LABEL[s]}
@@ -340,7 +340,7 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <div className="flex items-center gap-2 text-zinc-500">
               <Calculator size={15} />
-              <span className="text-xs uppercase tracking-wide">Live calc</span>
+              <span className="text-sm">This shift</span>
             </div>
             <Stat label="Span" value={calc ? fmtHours(calc.grossMins / 60) : "—"} />
             <Stat label="Net paid" value={calc ? fmtHours(calc.netHours) : "—"} />
@@ -400,8 +400,8 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
 function Stat({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="text-xs text-zinc-500">{label}</span>
-      <span className={cn("tabular-nums", strong ? "text-lg font-semibold text-emerald-300" : "text-sm font-medium text-zinc-200")}>{value}</span>
+      <span className="text-sm text-zinc-400">{label}</span>
+      <span className={cn("font-display", strong ? "text-2xl font-semibold text-vest" : "text-lg font-medium text-zinc-100")}>{value}</span>
     </div>
   );
 }

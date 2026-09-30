@@ -54,16 +54,13 @@ export function AppShell() {
 
   return (
     <div className="min-h-dvh">
-      <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/85 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1500px] items-center gap-4 px-4 sm:px-6">
           <div className="flex items-center gap-2 py-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100 text-zinc-900">
-              <ShieldCheck size={18} />
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-vest text-vest-ink">
+              <ShieldCheck size={19} strokeWidth={2.4} />
             </span>
-            <div className="hidden leading-tight sm:block">
-              <p className="text-sm font-semibold">ShiftDesk</p>
-              <p className="text-[11px] text-zinc-500">Roster · Fatigue · Pay</p>
-            </div>
+            <p className="hidden font-display text-2xl font-semibold tracking-tight text-zinc-50 sm:block">ShiftDesk</p>
           </div>
 
           <nav className="-mb-px ml-auto flex overflow-x-auto sm:ml-6" aria-label="Main">
@@ -73,8 +70,8 @@ export function AppShell() {
                 onClick={() => setTab(id)}
                 aria-current={tab === id ? "page" : undefined}
                 className={cn(
-                  "flex shrink-0 items-center gap-2 border-b-2 px-3 py-4 text-sm font-medium transition-colors",
-                  tab === id ? "border-zinc-100 text-zinc-50" : "border-transparent text-zinc-500 hover:text-zinc-200"
+                  "flex shrink-0 items-center gap-2 border-b-2 px-3 py-4 text-[15px] font-medium transition-colors",
+                  tab === id ? "border-vest text-zinc-50" : "border-transparent text-zinc-400 hover:text-zinc-100"
                 )}
               >
                 <Icon size={16} />
@@ -112,14 +109,14 @@ function Skeleton() {
   return (
     <div className="animate-pulse space-y-4" aria-busy="true" aria-label="Loading roster">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className="col-span-2 h-32 rounded-2xl bg-zinc-900" />
-        <div className="h-32 rounded-2xl bg-zinc-900" />
-        <div className="h-32 rounded-2xl bg-zinc-900" />
+        <div className="col-span-2 h-32 rounded-xl bg-zinc-900" />
+        <div className="h-32 rounded-xl bg-zinc-900" />
+        <div className="h-32 rounded-xl bg-zinc-900" />
       </div>
       <div className="h-10 w-72 rounded-lg bg-zinc-900" />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
         {Array.from({ length: 7 }).map((_, i) => (
-          <div key={i} className="h-40 rounded-2xl bg-zinc-900 xl:h-80" />
+          <div key={i} className="h-40 rounded-xl bg-zinc-900 xl:h-80" />
         ))}
       </div>
     </div>

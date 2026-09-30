@@ -17,6 +17,7 @@ interface Props {
   onMarkWorked: () => void;
 }
 
+/** A shift "ticket": times first, then venue, then money. */
 export function ShiftCard({ shift, employer, restWarning, onEdit, onDuplicate, onDelete, onMarkWorked }: Props) {
   const c = calcShift(shift);
   const [confirmDel, setConfirmDel] = useState(false);
@@ -31,97 +32,90 @@ export function ShiftCard({ shift, employer, restWarning, onEdit, onDuplicate, o
   return (
     <article
       className={cn(
-        "group relative rounded-xl border border-zinc-800 border-l-[3px] bg-zinc-900 p-3 transition-colors hover:border-zinc-700 hover:bg-zinc-900/80",
-        employer ? BADGE[employer.color].soft : "border-l-zinc-600",
-        shift.status === "paid" && "opacity-80"
+        "group relative flex flex-col rounded-lg border border-zinc-800 border-l-4 bg-zinc-950/60 p-3 transition-colors hover:border-zinc-700",
+        employer ? BADGE[employer.color].soft : "border-l-zinc-600"
       )}
     >
-      <button onClick={onEdit} className="absolute inset-0 rounded-xl" aria-label={`Edit shift at ${shift.site}`} />
+      <button onClick={onEdit} className="absolute inset-0 rounded-lg" aria-label={`Edit shift at ${shift.site}`} />
 
-      <div className="relative pointer-events-none">
-        <div className="flex items-center justify-between gap-2">
-          <span className="flex min-w-0 items-center gap-1">
-            <EmployerBadge employer={employer} compact />
-            {shift.recurringId && (
-              <Repeat size={11} className="shrink-0 text-zinc-500" aria-label="Fixed roster shift" />
+      <div className="pointer-events-none relative">
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-display text-2xl font-semibold leading-none text-zinc-50">
+            {shift.start}
+            <span className="px-1 text-zinc-500">–</span>
+            {shift.end}
+            {c.overnight && (
+              <span className="ml-1.5 inline-flex translate-y-[-3px] items-center gap-0.5 rounded bg-indigo-400/15 px-1 py-px align-middle font-sans text-[11px] font-semibold text-indigo-200" title="Finishes the next day">
+                <Moon size={10} /> next day
+              </span>
             )}
-          </span>
-          <StatusPill status={shift.status} short />
+          </p>
+          <div className="text-right font-display leading-none">
+            <p className="text-xl font-semibold text-zinc-50">{fmtMoney(c.pay)}</p>
+          </div>
         </div>
 
-        <p className="mt-2 line-clamp-2 text-sm font-semibold leading-snug text-zinc-100">{shift.site}</p>
-
-        <p className="mt-1 flex items-center gap-1.5 font-mono text-sm tabular-nums text-zinc-300">
-          {shift.start} – {shift.end}
-          {c.overnight && (
-            <span className="inline-flex items-center gap-0.5 rounded bg-indigo-500/15 px-1 py-px font-sans text-[10px] font-medium text-indigo-300" title="Finishes the next day">
-              <Moon size={10} /> +1
-            </span>
-          )}
+        <p className="mt-2 line-clamp-1 text-[15px] font-medium text-zinc-200" title={shift.site}>
+          {shift.site}
         </p>
 
-        <div className="mt-2 flex items-end justify-between border-t border-zinc-800 pt-2">
-          <div className="text-[11px] leading-tight text-zinc-500">
-            <p>
-              <span className="font-medium text-zinc-300">{fmtHours(c.netHours)}</span> net
-            </p>
-            <p>{shift.breakMins ? `${shift.breakMins}m unpaid` : "No break"}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-semibold tabular-nums text-zinc-50">{fmtMoney(c.pay)}</p>
-            <p className="text-[10px] tabular-nums text-zinc-500">@ ${shift.hourlyRate.toFixed(2)}/h</p>
-          </div>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <EmployerBadge employer={employer} compact />
+          <StatusPill status={shift.status} short />
+          {shift.recurringId && (
+            <span className="inline-flex items-center gap-1 text-xs text-zinc-500" title="From your fixed weekly roster">
+              <Repeat size={11} /> Fixed
+            </span>
+          )}
+          <span className="ml-auto font-display text-sm text-zinc-400">
+            {fmtHours(c.netHours)} at ${shift.hourlyRate.toFixed(2)}
+            {shift.breakMins ? `, ${shift.breakMins}m break` : ""}
+          </span>
         </div>
 
         {restWarning && (
-          <p className="mt-2 flex items-start gap-1 rounded-md bg-rose-500/10 px-1.5 py-1 text-[11px] leading-tight text-rose-300">
-            <AlertTriangle size={12} className="mt-px shrink-0" />
+          <p className="mt-2 flex items-center gap-1.5 rounded bg-rose-500/10 px-2 py-1 text-xs font-medium text-rose-300">
+            <AlertTriangle size={12} className="shrink-0" />
             {restWarning.gapHours < 0
-              ? "Overlaps the previous shift"
-              : `Only ${fmtHours(restWarning.gapHours)} rest since last shift`}
+              ? "Overlaps your previous shift"
+              : `Only ${fmtHours(restWarning.gapHours)} rest since your last shift`}
           </p>
         )}
 
         {shift.notes && (
-          <p className="mt-1.5 flex items-start gap-1 text-[11px] leading-tight text-zinc-500" title={shift.notes}>
-            <StickyNote size={11} className="mt-px shrink-0" />
+          <p className="mt-2 flex items-start gap-1.5 text-xs text-zinc-400" title={shift.notes}>
+            <StickyNote size={12} className="mt-px shrink-0" />
             <span className="line-clamp-1">{shift.notes}</span>
           </p>
         )}
       </div>
 
-      {/* Actions sit above the full-card edit button */}
-      <div className="relative mt-2 flex items-center justify-between">
-        {overdue ? (
-          <button
-            onClick={onMarkWorked}
-            className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-1.5 py-1 text-[11px] font-medium text-amber-300 hover:bg-amber-500/20"
-          >
-            <CheckCircle2 size={12} /> Mark worked
+      {overdue && (
+        <button
+          onClick={onMarkWorked}
+          className="relative mt-2 inline-flex items-center gap-1 self-start rounded bg-amber-400/10 px-2 py-1 text-xs font-semibold text-amber-300 hover:bg-amber-400/20"
+        >
+          <CheckCircle2 size={13} /> Mark as worked
+        </button>
+      )}
+
+      {/* Mobile: always-visible action row. Desktop: appears over the ticket corner on hover/focus. */}
+      <div className="relative mt-2 flex items-center justify-end gap-0.5 border-t border-zinc-800 pt-1.5 md:absolute md:right-2 md:top-2 md:mt-0 md:border-0 md:bg-zinc-900 md:p-0.5 md:opacity-0 md:shadow-lg md:ring-1 md:ring-zinc-700 md:rounded-md md:transition-opacity md:group-hover:opacity-100 md:group-focus-within:opacity-100">
+        <IconButton label="Edit" onClick={onEdit} className="h-8 w-8 md:h-7 md:w-7">
+          <Pencil size={14} />
+        </IconButton>
+        <IconButton label="Copy to next day" onClick={onDuplicate} className="h-8 w-8 md:h-7 md:w-7">
+          <Copy size={14} />
+        </IconButton>
+        {confirmDel ? (
+          <button onClick={onDelete} className="h-8 rounded bg-rose-500/20 px-2 text-xs font-semibold text-rose-300 hover:bg-rose-500/30 md:h-7">
+            Delete shift
           </button>
         ) : (
-          <span />
+          <IconButton label="Delete" onClick={() => setConfirmDel(true)} className="h-8 w-8 hover:text-rose-300 md:h-7 md:w-7">
+            <Trash2 size={14} />
+          </IconButton>
         )}
-        <div className="flex items-center opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
-          <IconButton label="Edit" onClick={onEdit} className="h-7 w-7">
-            <Pencil size={13} />
-          </IconButton>
-          <IconButton label="Duplicate to next day" onClick={onDuplicate} className="h-7 w-7">
-            <Copy size={13} />
-          </IconButton>
-          {confirmDel ? (
-            <button
-              onClick={onDelete}
-              className="ml-0.5 h-7 rounded-md bg-rose-500/20 px-2 text-[11px] font-semibold text-rose-300 hover:bg-rose-500/30"
-            >
-              Delete?
-            </button>
-          ) : (
-            <IconButton label="Delete" onClick={() => setConfirmDel(true)} className="h-7 w-7 hover:text-rose-300">
-              <Trash2 size={13} />
-            </IconButton>
-          )}
-        </div>
       </div>
     </article>
   );

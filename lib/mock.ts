@@ -29,7 +29,7 @@ export const DEFAULT_EMPLOYERS: Employer[] = [
     id: "emp_constant",
     name: "Constant Security",
     code: "CONST",
-    color: "amber",
+    color: "orange",
     defaultRate: 46.86,
     payCycle: "fortnightly",
     paymentType: "payroll",
