@@ -5,6 +5,18 @@ import type { Employer, RecurringShift } from "./types";
  * Edit any of this in the app under Employers & Sites — these are only the
  * starting values loaded on first open (or via "Reset to my defaults").
  */
+/** Added Oct 2026. Rate and pay details are placeholders until confirmed. */
+export const SAI_EMPLOYER: Employer = {
+  id: "emp_sai",
+  name: "SAI Security",
+  code: "SAI",
+  color: "lime",
+  defaultRate: 30.0,
+  payCycle: "weekly",
+  paymentType: "payroll",
+  sites: [],
+};
+
 export const DEFAULT_EMPLOYERS: Employer[] = [
   {
     id: "emp_border",
@@ -70,6 +82,7 @@ export const DEFAULT_EMPLOYERS: Employer[] = [
     timesheetVia: "Invoice PDF (INV-DDMM)",
     sites: [],
   },
+  SAI_EMPLOYER,
 ];
 
 /** Week the fixed roster starts from (Mon 28/09/2026) */

@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { addDays, startOfWeek, todayISO } from "./dates";
-import { DEFAULT_EMPLOYERS, DEFAULT_RECURRING } from "./mock";
+import { DEFAULT_EMPLOYERS, DEFAULT_RECURRING, SAI_EMPLOYER } from "./mock";
 import { calcShift } from "./pay";
 import type { Employer, ISODate, PaymentStatus, RecurringShift, Shift, WeekNote } from "./types";
 
@@ -204,7 +204,15 @@ export const useRoster = create<RosterState>()(
     {
       // v2 key: starts fresh with real employers instead of the old demo data
       name: "shiftdesk-roster-v2",
-      version: 2,
+      version: 3,
+      // Adds employers introduced after a device first saved its data, without touching anything else
+      migrate: (persisted, version) => {
+        const st = (persisted ?? {}) as { employers?: Employer[] };
+        if (version < 3 && Array.isArray(st.employers) && !st.employers.some((e) => e.id === SAI_EMPLOYER.id)) {
+          st.employers = [...st.employers, SAI_EMPLOYER];
+        }
+        return st as RosterState;
+      },
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         employers: s.employers,
