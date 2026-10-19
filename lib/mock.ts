@@ -5,13 +5,13 @@ import type { Employer, RecurringShift } from "./types";
  * Edit any of this in the app under Employers & Sites — these are only the
  * starting values loaded on first open (or via "Reset to my defaults").
  */
-/** Added Oct 2026. Rate and pay details are placeholders until confirmed. */
+/** Added Oct 2026. $35/h confirmed; pay cycle and sites still placeholders. */
 export const SAI_EMPLOYER: Employer = {
   id: "emp_sai",
   name: "SAI Security",
   code: "SAI",
   color: "lime",
-  defaultRate: 30.0,
+  defaultRate: 35.0,
   payCycle: "weekly",
   paymentType: "payroll",
   sites: [],
