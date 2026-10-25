@@ -360,7 +360,7 @@ function Kpi({ icon, label, value, sub, tone }: { icon: ReactNode; label: string
       <p className="flex items-center gap-1.5 text-sm text-zinc-400">
         {icon} {label}
       </p>
-      <p className={cn("mt-1 font-display text-3xl font-semibold leading-tight", tone === "emerald" ? "text-emerald-300" : tone === "amber" ? "text-amber-300" : "text-zinc-50")}>
+      <p className={cn("type-wide mt-1 text-3xl leading-tight", tone === "emerald" ? "text-emerald-300" : tone === "amber" ? "text-amber-300" : "text-zinc-50")}>
         {value}
       </p>
       <p className="mt-0.5 text-xs text-zinc-500">{sub}</p>

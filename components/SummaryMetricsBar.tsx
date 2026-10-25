@@ -71,95 +71,105 @@ export function SummaryMetricsBar() {
 
   const focus = m.onNow ?? m.next;
   const focusEmp = focus ? employers.find((e) => e.id === focus.employerId) : undefined;
+  const fc = focus ? calcShift(focus) : null;
+  const progress = m.onNow && fc ? Math.min(100, ((now - fc.startAt.getTime()) / (fc.endAt.getTime() - fc.startAt.getTime())) * 100) : null;
 
   return (
-    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-zinc-800 bg-zinc-800 lg:grid-cols-[1.25fr_1.4fr_1fr_1fr]">
-      {/* Now / next */}
-      <div className={cn("col-span-2 bg-zinc-900 p-4 lg:col-span-1", m.onNow && "bg-vest/[0.08]")}>
-        <p className="flex items-center gap-1.5 text-sm text-zinc-400">
-          <Clock3 size={15} /> {m.onNow ? "On shift now" : "Next shift"}
-        </p>
-        {focus ? (
+    <section aria-label="This week at a glance" className="space-y-5">
+      {/* The board: the one big thing on the page */}
+      <div className={cn("relative overflow-hidden rounded-2xl border p-5 sm:p-7", m.onNow ? "border-vest/40 bg-zinc-925" : "border-zinc-800 bg-zinc-925")}>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <span className={cn("inline-flex items-center gap-2 font-semibold", m.onNow ? "text-vest" : "text-zinc-300")}>
+            {m.onNow ? <span className="h-2 w-2 animate-pulse rounded-full bg-vest motion-reduce:animate-none" /> : <Clock3 size={15} />}
+            {m.onNow ? "On shift now" : "Next shift"}
+          </span>
+          {focus && (
+            <span className="text-zinc-400">
+              {m.onNow ? `${countdown(fc!.endAt.getTime() - now)} to go` : `starts in ${countdown(m.nextAt - now)}`}
+            </span>
+          )}
+        </div>
+
+        {focus && fc ? (
           <>
-            <p className="mt-1 font-display text-3xl font-semibold leading-tight text-zinc-50">
-              {m.onNow
-                ? `${countdown(calcShift(focus).endAt.getTime() - now)} to go`
-                : `In ${countdown(m.nextAt - now)}`}
+            <p className="type-board mt-4 text-[clamp(3.25rem,13vw,8.5rem)] leading-[0.98] text-zinc-50 sm:leading-[0.88]">
+              <span className="block sm:inline">{focus.start}</span>
+              <span className="mx-[0.12em] hidden -translate-y-[0.06em] font-extralight text-zinc-600 sm:inline-block" aria-label="to">–</span>
+              <span className="block text-zinc-400 sm:inline sm:text-zinc-50">{focus.end}</span>
             </p>
-            <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-zinc-300">
-              {focusEmp && <span className={cn("h-2 w-2 rounded-full", BADGE[focusEmp.color].dot)} />}
-              <span className="font-medium">{focusEmp?.code}</span>
-              <span className="text-zinc-400">
-                {fmtDow(focus.date)} {focus.start}–{focus.end}
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              {focusEmp && (
+                <span className="inline-flex items-center gap-2 text-[15px] font-semibold text-zinc-50">
+                  <span className={cn("h-3 w-3 rounded-sm", BADGE[focusEmp.color].bar)} />
+                  {focusEmp.name}
+                </span>
+              )}
+              <span className="text-[15px] text-zinc-300">{focus.site}</span>
+              <span className="text-[15px] text-zinc-400">
+                {fmtDow(focus.date)}
+                {fc.overnight ? " into the next morning" : ""}
               </span>
-            </p>
+              <span className="type-wide ml-auto text-xl text-zinc-50">{fmtMoney(fc.pay)}</span>
+            </div>
+            {progress !== null && (
+              <div className="mt-5 h-1 overflow-hidden rounded-full bg-zinc-800" aria-label={`${Math.round(progress)}% of shift done`}>
+                <div className="h-full rounded-full bg-vest" style={{ width: `${progress}%` }} />
+              </div>
+            )}
           </>
         ) : (
-          <p className="mt-1 font-display text-3xl font-semibold text-zinc-500">Nothing booked</p>
+          <p className="type-board mt-4 text-[clamp(2.5rem,9vw,5.5rem)] text-zinc-600">Nothing booked</p>
         )}
       </div>
 
-      {/* Hours meter */}
-      <div className="col-span-2 bg-zinc-900 p-4 lg:col-span-1">
-        <div className="flex items-baseline justify-between">
-          <p className="text-sm text-zinc-400">Hours this week</p>
-          <p className="text-sm text-zinc-500">{m.pay.shiftCount} shifts</p>
-        </div>
-        <p className="mt-1 font-display text-3xl font-semibold leading-tight text-zinc-50">
-          {fmtHours(hours).replace("h", "")}
-          <span className="ml-1 text-xl text-zinc-500">of {WEEKLY_HOURS_LIMIT}h</span>
-        </p>
-        <div className="relative mt-2 h-2 rounded-full bg-zinc-800">
-          <div
-            className={cn("h-full rounded-full transition-[width]", over ? "bg-rose-400" : near ? "bg-amber-300" : "bg-emerald-400")}
-            style={{ width: `${pct}%` }}
-          />
-          <span className="absolute -inset-y-1 w-0.5 rounded bg-zinc-200" style={{ left: `${limitPct}%` }} title={`${WEEKLY_HOURS_LIMIT}h`} />
-        </div>
-        <p className={cn("mt-2 text-sm", over ? "text-rose-300" : near ? "text-amber-200" : "text-zinc-400")}>
-          {over
-            ? `${fmtHours(hours - WEEKLY_HOURS_LIMIT)} over a full-time week`
-            : `${fmtHours(WEEKLY_HOURS_LIMIT - hours)} left before ${WEEKLY_HOURS_LIMIT}h`}
-        </p>
-      </div>
-
-      {/* Rest */}
-      <div className={cn("bg-zinc-900 p-4", m.rest.length > 0 && "bg-rose-500/[0.08]")}>
-        <p className="flex items-center gap-1.5 text-sm text-zinc-400">
-          <BedDouble size={15} /> Rest gaps
-        </p>
-        {m.rest.length ? (
-          <>
-            <p className="mt-1 flex items-center gap-2 font-display text-2xl font-semibold leading-tight text-rose-300 sm:text-3xl">
-              <AlertTriangle size={22} /> {m.rest.length} short
-            </p>
-            <p className="mt-1 text-sm text-rose-200/80">
-              Tightest {minGap! < 0 ? "overlaps" : `is ${fmtHours(minGap!)}`}, aim for {MIN_REST_HOURS}h+
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="mt-1 flex items-center gap-2 font-display text-2xl font-semibold leading-tight text-emerald-300 sm:text-3xl">
-              <CheckCircle2 size={22} /> All clear
-            </p>
-            <p className="mt-1 text-sm text-zinc-400">Every gap is {MIN_REST_HOURS}h or more</p>
-          </>
-        )}
-        {m.long > 0 && (
-          <p className="mt-1 text-sm text-amber-200">
-            {m.long} shift{m.long > 1 ? "s" : ""} over {LONG_SHIFT_HOURS}h
+      {/* Week ledger: ruled columns, no boxes */}
+      <dl className="grid grid-cols-2 gap-y-5 border-y border-zinc-800 py-5 lg:grid-cols-[1.6fr_1fr_1fr_1fr] lg:divide-x lg:divide-zinc-800">
+        <div className="col-span-2 lg:col-span-1 lg:pr-6">
+          <dt className="flex items-baseline justify-between text-sm text-zinc-400">
+            <span>Hours this week</span>
+            <span>{m.pay.shiftCount} shifts</span>
+          </dt>
+          <dd className="mt-1 flex items-baseline gap-2">
+            <span className="type-wide text-4xl text-zinc-50">{fmtHours(hours).replace("h", "")}</span>
+            <span className="text-zinc-500">of {WEEKLY_HOURS_LIMIT}h</span>
+          </dd>
+          <div className="relative mt-3 h-1.5 rounded-full bg-zinc-800">
+            <div className={cn("h-full rounded-full", over ? "bg-rose-400" : near ? "bg-amber-300" : "bg-emerald-400")} style={{ width: `${pct}%` }} />
+            <span className="absolute -inset-y-1 w-0.5 rounded bg-zinc-300" style={{ left: `${limitPct}%` }} title={`${WEEKLY_HOURS_LIMIT}h`} />
+          </div>
+          <p className={cn("mt-2 text-sm", over ? "text-rose-300" : near ? "text-amber-200" : "text-zinc-400")}>
+            {over ? `${fmtHours(hours - WEEKLY_HOURS_LIMIT)} over a full-time week` : `${fmtHours(WEEKLY_HOURS_LIMIT - hours)} left before ${WEEKLY_HOURS_LIMIT}h`}
           </p>
-        )}
-      </div>
+        </div>
 
-      {/* Pay */}
-      <div className="bg-zinc-900 p-4">
-        <p className="text-sm text-zinc-400">Week&apos;s pay (gross)</p>
-        <p className="mt-1 font-display text-2xl font-semibold leading-tight text-zinc-50 sm:text-3xl">{fmtMoney(m.pay.grossProjected)}</p>
-        <p className="mt-1 text-sm text-zinc-400">
-          <span className="text-emerald-300">{fmtMoney(m.pay.verified)}</span> already worked
-        </p>
-      </div>
-    </div>
+        <div className="pr-4 lg:px-6">
+          <dt className="flex items-center gap-1.5 text-sm text-zinc-400"><BedDouble size={15} /> Rest gaps</dt>
+          {m.rest.length ? (
+            <dd>
+              <p className="type-wide mt-1 flex items-center gap-2 text-2xl text-rose-300"><AlertTriangle size={20} /> {m.rest.length} short</p>
+              <p className="mt-1 text-sm text-rose-200/80">Tightest {minGap! < 0 ? "overlaps" : `is ${fmtHours(minGap!)}`}</p>
+            </dd>
+          ) : (
+            <dd>
+              <p className="type-wide mt-1 flex items-center gap-2 text-2xl text-emerald-300"><CheckCircle2 size={20} /> Clear</p>
+              <p className="mt-1 text-sm text-zinc-400">All gaps {MIN_REST_HOURS}h+</p>
+            </dd>
+          )}
+          {m.long > 0 && <p className="mt-1 text-sm text-amber-200">{m.long} over {LONG_SHIFT_HOURS}h</p>}
+        </div>
+
+        <div className="pl-4 lg:px-6">
+          <dt className="text-sm text-zinc-400">Week&apos;s pay</dt>
+          <dd className="type-wide mt-1 text-2xl text-zinc-50">{fmtMoney(m.pay.grossProjected)}</dd>
+          <dd className="mt-1 text-sm text-zinc-400">before tax</dd>
+        </div>
+
+        <div className="col-span-2 lg:col-span-1 lg:pl-6">
+          <dt className="text-sm text-zinc-400">Already worked</dt>
+          <dd className="type-wide mt-1 text-2xl text-emerald-300">{fmtMoney(m.pay.verified)}</dd>
+          <dd className="mt-1 text-sm text-zinc-400">{fmtMoney(m.pay.grossProjected - m.pay.verified)} still to work</dd>
+        </div>
+      </dl>
+    </section>
   );
 }

@@ -2,12 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* One variable file (weight 100–900, width 62–125%) serves every role */
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/archivo.woff2") format("woff2-variations"), url("/fonts/archivo.woff2") format("woff2");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 :root { color-scheme: dark; }
-html, body { background: #0d1822; }
+html, body { background: #000; }
 body { -webkit-tap-highlight-color: transparent; font-feature-settings: "tnum" 1; }
-::selection { background: rgb(255 210 63 / 0.35); }
-* { scrollbar-width: thin; scrollbar-color: #344755 transparent; }
-:focus-visible { outline: 2px solid #ffd23f; outline-offset: 2px; }
+::selection { background: rgb(255 212 0 / 0.35); }
+* { scrollbar-width: thin; scrollbar-color: #353534 transparent; }
+:focus-visible { outline: 2px solid #ffd400; outline-offset: 2px; }
+
+/* Width is the type system: condensed figures for dense data, extra-wide for the board */
+.font-display { font-stretch: 78%; font-variation-settings: normal; letter-spacing: -0.01em; }
+.type-board { font-stretch: 125%; font-weight: 800; letter-spacing: -0.04em; line-height: 0.88; }
+.type-wide { font-stretch: 115%; font-weight: 700; letter-spacing: -0.02em; }
 
 /* Rest-gap hatching on the day timeline */
 .hatch-rest {

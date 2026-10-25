@@ -310,7 +310,7 @@ function DayStrip({
       })}
 
       {nowPct !== null && nowPct >= 0 && nowPct <= 100 && (
-        <span className="pointer-events-none absolute -inset-y-1 w-0.5 rounded-full bg-vest shadow-[0_0_0_2px_#0d1822]" style={{ left: `${nowPct}%` }}>
+        <span className="pointer-events-none absolute -inset-y-1 w-0.5 rounded-full bg-vest shadow-[0_0_0_2px_#000000]" style={{ left: `${nowPct}%` }}>
           <span className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full bg-vest" />
         </span>
       )}

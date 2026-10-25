@@ -1,10 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource/barlow/400.css";
-import "@fontsource/barlow/500.css";
-import "@fontsource/barlow/600.css";
-import "@fontsource/barlow-condensed/500.css";
-import "@fontsource/barlow-condensed/600.css";
-import "@fontsource/barlow-condensed/700.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,11 +9,14 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "ShiftDesk", statusBarStyle: "black-translucent" },
 };
 
-export const viewport: Viewport = { themeColor: "#0d1822", width: "device-width", initialScale: 1, viewportFit: "cover" };
+export const viewport: Viewport = { themeColor: "#000000", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-AU">
+      <head>
+        <link rel="preload" href="/fonts/archivo.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-dvh bg-zinc-950 font-sans text-zinc-100 antialiased">{children}</body>
     </html>
   );
