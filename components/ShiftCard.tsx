@@ -32,11 +32,11 @@ export function ShiftCard({ shift, employer, restWarning, onEdit, onDuplicate, o
   return (
     <article
       className={cn(
-        "group relative flex flex-col rounded-lg border border-zinc-800 border-l-4 bg-zinc-950/60 p-3 transition-colors hover:border-y-zinc-700 hover:border-r-zinc-700",
+        "group relative flex flex-col rounded-xl border-l-4 bg-zinc-800 p-3 transition-colors hover:bg-zinc-700/70",
         employer ? BADGE[employer.color].soft : "border-l-zinc-600"
       )}
     >
-      <button onClick={onEdit} className="absolute inset-0 rounded-lg" aria-label={`Edit shift at ${shift.site}`} />
+      <button onClick={onEdit} className="absolute inset-0 rounded-xl" aria-label={`Edit shift at ${shift.site}`} />
 
       <div className="pointer-events-none relative">
         <div className="flex items-start justify-between gap-2">
@@ -100,7 +100,7 @@ export function ShiftCard({ shift, employer, restWarning, onEdit, onDuplicate, o
       )}
 
       {/* Mobile: always-visible action row. Desktop: appears over the ticket corner on hover/focus. */}
-      <div className="relative mt-2 flex items-center justify-end gap-0.5 border-t border-zinc-800 pt-1.5 md:absolute md:right-2 md:top-2 md:mt-0 md:border-0 md:bg-zinc-900 md:p-0.5 md:invisible md:shadow-lg md:ring-1 md:ring-zinc-700 md:rounded-md md:group-hover:visible md:group-focus-within:visible">
+      <div className="relative mt-2 flex items-center justify-end gap-0.5 border-t border-zinc-700/60 pt-1.5 md:absolute md:right-2 md:top-2 md:mt-0 md:border-0 md:bg-zinc-700 md:p-0.5 md:invisible md:shadow-lg md:rounded-full md:group-hover:visible md:group-focus-within:visible">
         <IconButton label="Edit" onClick={onEdit} className="h-8 w-8 md:h-7 md:w-7">
           <Pencil size={14} />
         </IconButton>

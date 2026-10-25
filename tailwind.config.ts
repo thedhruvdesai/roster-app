@@ -1,37 +1,48 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Black "departure board" tokens.
- * zinc is remapped to a neutral graphite ramp on true black, so every existing
- * surface/text class picks up the new theme without per-component rewrites.
+ * Apple Human Interface Guidelines, dark appearance.
+ * - zinc → iOS dark system greys (systemBackground, secondarySystemBackground, systemGray1–6, labels)
+ * - colour palettes → iOS dark system colours, so every existing badge/status class picks them up
+ * - vest → systemYellow, the app tint (as in Apple Notes)
  */
+const sys = (c: string, light: string) => ({ 200: light, 300: light, 400: c, 500: c, 600: c });
+
 const config: Config = {
   content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   theme: {
     extend: {
       colors: {
         zinc: {
-          50: "#F4F3EF", // warm off-white text
-          100: "#E7E6E1",
-          200: "#CFCEC9",
-          300: "#AEADA8",
-          400: "#8E8D89",
-          500: "#6E6D6A",
-          600: "#4F4E4C",
-          700: "#353534",
-          800: "#232323",
-          900: "#141414",
-          925: "#0C0C0C",
-          950: "#000000",
+          50: "#FFFFFF", // label
+          100: "#F2F2F7",
+          200: "#E5E5EA",
+          300: "#C7C7CC",
+          400: "#98989F", // secondaryLabel
+          500: "#6C6C70", // tertiaryLabel
+          600: "#48484A", // systemGray3
+          700: "#3A3A3C", // systemGray4 / opaque separator
+          800: "#2C2C2E", // tertiarySystemBackground
+          900: "#1C1C1E", // secondarySystemBackground (grouped cells)
+          925: "#121214",
+          950: "#000000", // systemBackground
         },
-        vest: { DEFAULT: "#FFD400", soft: "#FFE04D", ink: "#141100" },
+        sky: sys("#0A84FF", "#409CFF"), // systemBlue
+        orange: sys("#FF9F0A", "#FFB340"), // systemOrange
+        violet: sys("#BF5AF2", "#DA8FFF"), // systemPurple
+        rose: sys("#FF453A", "#FF6961"), // systemRed
+        emerald: sys("#30D158", "#4CD964"), // systemGreen
+        lime: sys("#63E6E2", "#8CF0EC"), // systemMint
+        cyan: sys("#64D2FF", "#8ADDFF"), // systemCyan
+        amber: sys("#FF9F0A", "#FFB340"), // pending = systemOrange
+        indigo: sys("#5E5CE6", "#7D7AFF"), // systemIndigo
+        vest: { DEFAULT: "#FFD60A", soft: "#FFE34D", ink: "#000000" }, // systemYellow tint
       },
       fontFamily: {
-        sans: ["Archivo", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
-        display: ["Archivo", "system-ui", "sans-serif"],
-        mono: ["Archivo", "ui-monospace", "monospace"],
+        sans: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "Inter", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', "Inter", "system-ui", "sans-serif"],
+        mono: ["-apple-system", "BlinkMacSystemFont", "Inter", "system-ui", "sans-serif"],
       },
-      letterSpacing: { board: "-0.035em" },
     },
   },
   plugins: [],

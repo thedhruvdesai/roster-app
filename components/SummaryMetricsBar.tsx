@@ -77,14 +77,14 @@ export function SummaryMetricsBar() {
   return (
     <section aria-label="This week at a glance" className="space-y-5">
       {/* The board: the one big thing on the page */}
-      <div className={cn("relative overflow-hidden rounded-2xl border p-5 sm:p-7", m.onNow ? "border-vest/40 bg-zinc-925" : "border-zinc-800 bg-zinc-925")}>
+      <div className={cn("relative overflow-hidden rounded-[22px] bg-zinc-900 p-5 sm:p-7", m.onNow && "ring-1 ring-inset ring-vest/50")}>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-          <span className={cn("inline-flex items-center gap-2 font-semibold", m.onNow ? "text-vest" : "text-zinc-300")}>
+          <span className={cn("inline-flex items-center gap-2 text-[15px] font-semibold", m.onNow ? "text-vest" : "text-zinc-50")}>
             {m.onNow ? <span className="h-2 w-2 animate-pulse rounded-full bg-vest motion-reduce:animate-none" /> : <Clock3 size={15} />}
             {m.onNow ? "On shift now" : "Next shift"}
           </span>
           {focus && (
-            <span className="text-zinc-400">
+            <span className="text-[15px] text-zinc-400">
               {m.onNow ? `${countdown(fc!.endAt.getTime() - now)} to go` : `starts in ${countdown(m.nextAt - now)}`}
             </span>
           )}
@@ -92,10 +92,10 @@ export function SummaryMetricsBar() {
 
         {focus && fc ? (
           <>
-            <p className="type-board mt-4 text-[clamp(3.25rem,13vw,8.5rem)] leading-[0.98] text-zinc-50 sm:leading-[0.88]">
+            <p className="type-board mt-3 text-[clamp(3.5rem,15vw,7.5rem)] text-zinc-50">
               <span className="block sm:inline">{focus.start}</span>
-              <span className="mx-[0.12em] hidden -translate-y-[0.06em] font-extralight text-zinc-600 sm:inline-block" aria-label="to">–</span>
-              <span className="block text-zinc-400 sm:inline sm:text-zinc-50">{focus.end}</span>
+              <span className="mx-[0.12em] hidden font-light text-zinc-600 sm:inline-block" aria-label="to">–</span>
+              <span className="block text-zinc-500 sm:inline sm:text-zinc-50">{focus.end}</span>
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
               {focusEmp && (
@@ -109,31 +109,31 @@ export function SummaryMetricsBar() {
                 {fmtDow(focus.date)}
                 {fc.overnight ? " into the next morning" : ""}
               </span>
-              <span className="type-wide ml-auto text-xl text-zinc-50">{fmtMoney(fc.pay)}</span>
+              <span className="ml-auto text-[20px] font-semibold text-zinc-50">{fmtMoney(fc.pay)}</span>
             </div>
             {progress !== null && (
-              <div className="mt-5 h-1 overflow-hidden rounded-full bg-zinc-800" aria-label={`${Math.round(progress)}% of shift done`}>
+              <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-zinc-700" aria-label={`${Math.round(progress)}% of shift done`}>
                 <div className="h-full rounded-full bg-vest" style={{ width: `${progress}%` }} />
               </div>
             )}
           </>
         ) : (
-          <p className="type-board mt-4 text-[clamp(2.5rem,9vw,5.5rem)] text-zinc-600">Nothing booked</p>
+          <p className="type-board mt-3 text-[clamp(2.25rem,9vw,4rem)] text-zinc-500">Nothing booked</p>
         )}
       </div>
 
       {/* Week ledger: ruled columns, no boxes */}
-      <dl className="grid grid-cols-2 gap-y-5 border-y border-zinc-800 py-5 lg:grid-cols-[1.6fr_1fr_1fr_1fr] lg:divide-x lg:divide-zinc-800">
-        <div className="col-span-2 lg:col-span-1 lg:pr-6">
-          <dt className="flex items-baseline justify-between text-sm text-zinc-400">
+      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
+        <div className="col-span-2 rounded-2xl bg-zinc-900 p-4 lg:col-span-1">
+          <dt className="flex items-baseline justify-between text-[13px] font-semibold text-zinc-400">
             <span>Hours this week</span>
             <span>{m.pay.shiftCount} shifts</span>
           </dt>
           <dd className="mt-1 flex items-baseline gap-2">
-            <span className="type-wide text-4xl text-zinc-50">{fmtHours(hours).replace("h", "")}</span>
+            <span className="text-[34px] font-bold leading-none text-zinc-50">{fmtHours(hours).replace("h", "")}</span>
             <span className="text-zinc-500">of {WEEKLY_HOURS_LIMIT}h</span>
           </dd>
-          <div className="relative mt-3 h-1.5 rounded-full bg-zinc-800">
+          <div className="relative mt-3 h-1.5 rounded-full bg-zinc-700">
             <div className={cn("h-full rounded-full", over ? "bg-rose-400" : near ? "bg-amber-300" : "bg-emerald-400")} style={{ width: `${pct}%` }} />
             <span className="absolute -inset-y-1 w-0.5 rounded bg-zinc-300" style={{ left: `${limitPct}%` }} title={`${WEEKLY_HOURS_LIMIT}h`} />
           </div>
@@ -142,31 +142,31 @@ export function SummaryMetricsBar() {
           </p>
         </div>
 
-        <div className="pr-4 lg:px-6">
-          <dt className="flex items-center gap-1.5 text-sm text-zinc-400"><BedDouble size={15} /> Rest gaps</dt>
+        <div className="rounded-2xl bg-zinc-900 p-4">
+          <dt className="flex items-center gap-1.5 text-[13px] font-semibold text-zinc-400"><BedDouble size={15} /> Rest gaps</dt>
           {m.rest.length ? (
             <dd>
-              <p className="type-wide mt-1 flex items-center gap-2 text-2xl text-rose-300"><AlertTriangle size={20} /> {m.rest.length} short</p>
+              <p className="mt-1 flex items-center gap-2 text-[22px] font-bold text-rose-300"><AlertTriangle size={20} /> {m.rest.length} short</p>
               <p className="mt-1 text-sm text-rose-200/80">Tightest {minGap! < 0 ? "overlaps" : `is ${fmtHours(minGap!)}`}</p>
             </dd>
           ) : (
             <dd>
-              <p className="type-wide mt-1 flex items-center gap-2 text-2xl text-emerald-300"><CheckCircle2 size={20} /> Clear</p>
+              <p className="mt-1 flex items-center gap-2 text-[22px] font-bold text-emerald-300"><CheckCircle2 size={20} /> Clear</p>
               <p className="mt-1 text-sm text-zinc-400">All gaps {MIN_REST_HOURS}h+</p>
             </dd>
           )}
           {m.long > 0 && <p className="mt-1 text-sm text-amber-200">{m.long} over {LONG_SHIFT_HOURS}h</p>}
         </div>
 
-        <div className="pl-4 lg:px-6">
-          <dt className="text-sm text-zinc-400">Week&apos;s pay</dt>
-          <dd className="type-wide mt-1 text-2xl text-zinc-50">{fmtMoney(m.pay.grossProjected)}</dd>
+        <div className="rounded-2xl bg-zinc-900 p-4">
+          <dt className="text-[13px] font-semibold text-zinc-400">Week&apos;s pay</dt>
+          <dd className="mt-1 text-[22px] font-bold text-zinc-50">{fmtMoney(m.pay.grossProjected)}</dd>
           <dd className="mt-1 text-sm text-zinc-400">before tax</dd>
         </div>
 
-        <div className="col-span-2 lg:col-span-1 lg:pl-6">
-          <dt className="text-sm text-zinc-400">Already worked</dt>
-          <dd className="type-wide mt-1 text-2xl text-emerald-300">{fmtMoney(m.pay.verified)}</dd>
+        <div className="col-span-2 rounded-2xl bg-zinc-900 p-4 lg:col-span-1">
+          <dt className="text-[13px] font-semibold text-zinc-400">Already worked</dt>
+          <dd className="mt-1 text-[22px] font-bold text-emerald-300">{fmtMoney(m.pay.verified)}</dd>
           <dd className="mt-1 text-sm text-zinc-400">{fmtMoney(m.pay.grossProjected - m.pay.verified)} still to work</dd>
         </div>
       </dl>

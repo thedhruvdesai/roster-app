@@ -229,22 +229,30 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
           e.preventDefault();
           save();
         }}
-        className="sheet-in pb-safe relative flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-zinc-800 bg-zinc-900 shadow-2xl sm:rounded-xl sm:pb-0"
+        className="sheet-in pb-safe relative flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[14px] bg-zinc-900 shadow-2xl sm:rounded-[14px] sm:pb-0"
       >
         <span className="mx-auto mt-2 h-1 w-10 rounded-full bg-zinc-700 sm:hidden" aria-hidden />
-        <header className="flex items-center justify-between border-b border-zinc-800 px-5 py-3 sm:py-4">
-          <div>
-            <h2 id="shift-modal-title" className="font-display text-2xl font-semibold text-zinc-50">
-              {shift ? "Edit shift" : "New shift"}
+        {/* iOS sheet nav bar: Cancel · title · primary action */}
+        <header className="hairline grid grid-cols-[1fr_auto_1fr] items-center px-4 py-2.5">
+          <button type="button" onClick={onClose} className="justify-self-start text-[17px] text-vest active:opacity-60">
+            Cancel
+          </button>
+          <div className="text-center">
+            <h2 id="shift-modal-title" className="text-[17px] font-semibold text-zinc-50">
+              {shift ? "Edit Shift" : "New Shift"}
             </h2>
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-zinc-400">
               {fmtDow(d.date)} {fmtAU(d.date)}
-              {calc?.overnight && ` → ${fmtDow(addDays(d.date, 1))} ${fmtAU(addDays(d.date, 1))}`}
+              {calc?.overnight && ` → ${fmtDow(addDays(d.date, 1))}`}
             </p>
           </div>
-          <IconButton label="Close" onClick={onClose} type="button">
-            <X size={18} />
-          </IconButton>
+          <button
+            type="submit"
+            disabled={submitted && !valid}
+            className="justify-self-end text-[17px] font-semibold text-vest active:opacity-60 disabled:text-zinc-600"
+          >
+            {shift ? "Done" : "Add"}
+          </button>
         </header>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
@@ -262,7 +270,7 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
                       onClick={() => applyPreset(p)}
                       className={cn(
                         "flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-left transition-colors",
-                        on ? "border-vest bg-vest/10" : "border-zinc-700 hover:border-zinc-500"
+                        on ? "border-vest bg-vest/10" : "border-transparent bg-zinc-800 hover:bg-zinc-700"
                       )}
                     >
                       {e && <span className={cn("h-7 w-1 rounded-full", BADGE[e.color].bar)} />}
@@ -371,15 +379,15 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
           </div>
 
           <Field label="Payment status">
-            <div className="grid grid-cols-3 gap-1 rounded-lg border border-zinc-800 bg-zinc-950 p-1">
+            <div className="grid grid-cols-3 gap-0.5 rounded-[9px] bg-zinc-800 p-0.5">
               {STATUSES.map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => set("status", s)}
                   className={cn(
-                    "rounded-md px-2 py-2 text-sm font-medium transition-colors",
-                    d.status === s ? "bg-zinc-700 text-zinc-50" : "text-zinc-400 hover:text-zinc-200"
+                    "rounded-[7px] px-2 py-1.5 text-[13px] font-semibold transition-colors",
+                    d.status === s ? "bg-zinc-600 text-zinc-50 shadow" : "text-zinc-300"
                   )}
                 >
                   {PAYMENT_STATUS_LABEL[s]}
@@ -400,7 +408,7 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
         </div>
 
         {/* Live calculation footer */}
-        <div className="border-t border-zinc-800 bg-zinc-950/60 px-5 py-3">
+        <div className="hairline-t bg-zinc-925 px-5 py-3">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <div className="flex items-center gap-2 text-zinc-500">
               <Calculator size={15} />
@@ -432,30 +440,20 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
           </div>
         </div>
 
-        <footer className="flex items-center justify-between gap-2 border-t border-zinc-800 px-5 py-3">
-          {shift ? (
-            <Button
+        {shift && (
+          <div className="hairline-t px-4 py-2">
+            <button
               type="button"
-              variant="danger"
               onClick={() => {
                 deleteShiftWithUndo(shift.id);
                 onClose();
               }}
+              className="h-11 w-full rounded-xl text-[17px] text-rose-400 active:bg-zinc-800"
             >
-              <Trash2 size={15} /> Delete
-            </Button>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" disabled={submitted && !valid}>
-              {shift ? "Save changes" : "Add shift"}
-            </Button>
+              Delete Shift
+            </button>
           </div>
-        </footer>
+        )}
       </form>
     </div>
   );

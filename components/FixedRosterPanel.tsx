@@ -52,7 +52,7 @@ export function FixedRosterPanel() {
           No fixed shifts yet.
         </p>
       ) : (
-        <ul className="divide-y divide-zinc-800/70 rounded-xl border border-zinc-800">
+        <ul className="divide-y divide-zinc-700/60 rounded-xl border border-zinc-800">
           {recurring.map((r) => {
             const emp = employers.find((e) => e.id === r.employerId);
             const rate = r.hourlyRate ?? resolveRate(employers, r.employerId, r.site);

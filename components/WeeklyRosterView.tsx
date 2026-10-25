@@ -137,7 +137,7 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
         />
       )}
 
-      <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
+      <div className="overflow-hidden rounded-2xl bg-zinc-900">
         {/* Hour ruler, aligned with the strips below */}
         <div className="grid grid-cols-[1fr] gap-x-3 border-b border-zinc-800 px-3 py-2 md:grid-cols-[5.5rem_1fr_7.5rem] md:px-4">
           <span className="hidden md:block" />
@@ -169,7 +169,7 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
                 key={r.date}
                 id={`day-${r.date}`}
                 className={cn(
-                  "scroll-mt-20 border-b border-zinc-800 px-3 py-3 last:border-b-0 md:px-4",
+                  "scroll-mt-20 border-b border-zinc-700/60 px-3 py-3 last:border-b-0 md:px-4",
                   isToday && "bg-zinc-800/40"
                 )}
               >
@@ -213,7 +213,7 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
                 </div>
 
                 {r.own.length > 0 && (
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2 md:ml-[6.25rem] md:mr-[8.25rem] lg:grid-cols-3">
+                  <div className="mt-3 grid gap-2 sm:grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] md:ml-[6.25rem] md:mr-[8.25rem]">
                     {r.own.map((s) => (
                       <ShiftCard
                         key={s.id}

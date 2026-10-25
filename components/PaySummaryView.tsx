@@ -69,14 +69,14 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
       {/* ── Period selector ───────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-lg border border-zinc-800 bg-zinc-900 p-0.5">
+          <div className="flex rounded-[9px] bg-zinc-800 p-0.5">
             {(["week", "fortnight", "custom"] as Mode[]).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-sm font-medium capitalize transition-colors",
-                  mode === m ? "bg-vest text-vest-ink" : "text-zinc-400 hover:text-zinc-100"
+                  "rounded-[7px] px-4 py-1.5 text-[13px] font-semibold capitalize transition-colors",
+                  mode === m ? "bg-zinc-600 text-zinc-50 shadow" : "text-zinc-300"
                 )}
               >
                 {m === "custom" ? "Date range" : m}
@@ -133,7 +133,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
               <h3 className="font-display text-xl font-semibold text-zinc-50">By employer</h3>
             </div>
             {/* Mobile: one row per employer */}
-            <ul className="divide-y divide-zinc-800 md:hidden">
+            <ul className="divide-y divide-zinc-700/60 md:hidden">
               {summary.byEmployer.map((l) => {
                 const workedIds = shiftsInRange(shifts, from, to)
                   .filter((x) => x.employerId === l.employer.id && x.status === "worked")
@@ -176,7 +176,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                     <th className="px-4 py-2" />
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-800/70">
+                <tbody className="divide-y divide-zinc-700/60">
                   {summary.byEmployer.map((l) => {
                     const workedIds = shiftsInRange(shifts, from, to)
                       .filter((s) => s.employerId === l.employer.id && s.status === "worked")
@@ -255,7 +255,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                         <th className="px-4 py-2 font-medium">Payment status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-zinc-800/70">
+                    <tbody className="divide-y divide-zinc-700/60">
                       {ledger.map((s) => {
                         const c = calcShift(s);
                         return (
@@ -287,7 +287,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                 </div>
 
                 {/* Mobile cards */}
-                <ul className="divide-y divide-zinc-800/70 md:hidden">
+                <ul className="divide-y divide-zinc-700/60 md:hidden">
                   {ledger.map((s) => {
                     const c = calcShift(s);
                     return (
@@ -395,14 +395,14 @@ function StatusBar({ paid, pending, scheduled, slim }: { paid: number; pending: 
 
 function StatusSelect({ status, onChange }: { status: PaymentStatus; onChange: (s: PaymentStatus) => void }) {
   return (
-    <div className="inline-flex rounded-full bg-zinc-950 p-0.5 ring-1 ring-zinc-800">
+    <div className="inline-flex rounded-[9px] bg-zinc-800 p-0.5">
       {(["scheduled", "worked", "paid"] as PaymentStatus[]).map((s) => (
         <button
           key={s}
           onClick={() => onChange(s)}
           className={cn(
-            "rounded-full px-2 py-0.5 text-xs font-medium transition-colors",
-            status === s ? cn(STATUS_STYLE[s], "ring-1 ring-inset") : "text-zinc-500 hover:text-zinc-300"
+            "rounded-[7px] px-2.5 py-1 text-xs font-semibold transition-colors",
+            status === s ? STATUS_STYLE[s] : "text-zinc-400"
           )}
           aria-pressed={status === s}
         >

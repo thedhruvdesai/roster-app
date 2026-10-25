@@ -23,7 +23,7 @@ The app is a static export (`output: "export"`), so `npm run build` writes a pla
 
 ```
 app/
-  layout.tsx               preloaded Archivo font, black theme, metadata
+  layout.tsx               SF Pro (Apple) / Inter fallback, Apple dark theme, metadata
   page.tsx                 renders <AppShell/>
 components/
   AppShell.tsx             top tabs, hydration gate, shift modal host

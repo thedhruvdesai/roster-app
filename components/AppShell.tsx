@@ -1,7 +1,7 @@
 "use client";
 
-import { Building2, CalendarRange, Plus, ShieldCheck, Wallet } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Building2, CalendarDays, Plus, ShieldCheck, Wallet } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { addDays, todayISO, weekDays } from "@/lib/dates";
 import { type Tab, useRoster } from "@/lib/store";
 import type { ISODate, Shift } from "@/lib/types";
@@ -13,10 +13,10 @@ import { SummaryMetricsBar } from "./SummaryMetricsBar";
 import { Toaster } from "./Toaster";
 import { WeeklyRosterView } from "./WeeklyRosterView";
 
-const TABS: { id: Tab; label: string; short: string; icon: typeof CalendarRange }[] = [
-  { id: "roster", label: "Roster", short: "Roster", icon: CalendarRange },
-  { id: "pay", label: "Pay & timesheets", short: "Pay", icon: Wallet },
-  { id: "employers", label: "Employers & sites", short: "Employers", icon: Building2 },
+const TABS: { id: Tab; title: string; short: string; icon: typeof CalendarDays }[] = [
+  { id: "roster", title: "Roster", short: "Roster", icon: CalendarDays },
+  { id: "pay", title: "Pay & Timesheets", short: "Pay", icon: Wallet },
+  { id: "employers", title: "Employers & Sites", short: "Employers", icon: Building2 },
 ];
 
 /** Waits for zustand to rehydrate from LocalStorage so SSR markup never mismatches */
@@ -53,6 +53,17 @@ export function AppShell() {
   const openEdit = useCallback((shift: Shift) => setModal({ open: true, shift, date: shift.date }), []);
   const close = useCallback(() => setModal((m) => ({ ...m, open: false })), []);
 
+  // iOS-style collapsing large title: the inline title fades in once the large one scrolls away
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setCollapsed(!e.isIntersecting), { rootMargin: "-56px 0px 0px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hydrated, tab]);
+
   const changeTab = (t: Tab) => {
     setTab(t);
     window.scrollTo({ top: 0 });
@@ -60,80 +71,97 @@ export function AppShell() {
 
   const days = weekDays(weekStart);
   const addDate = days.includes(todayISO()) ? todayISO() : days[0];
+  const current = TABS.find((t) => t.id === tab)!;
 
   return (
-    <div className="min-h-dvh">
-      <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/90 pt-[env(safe-area-inset-top)] backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-[1500px] items-center gap-4 px-4 sm:px-6 md:h-16">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-vest text-vest-ink">
-              <ShieldCheck size={19} strokeWidth={2.4} />
-            </span>
-            <p className="font-display text-2xl font-semibold tracking-tight text-zinc-50">ShiftDesk</p>
-          </div>
-
-          {/* Desktop tabs */}
-          <nav className="ml-8 hidden h-full md:flex" aria-label="Main">
-            {TABS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => changeTab(id)}
-                aria-current={tab === id ? "page" : undefined}
-                className={cn(
-                  "flex h-full items-center gap-2 border-b-2 px-4 text-[15px] font-medium transition-colors",
-                  tab === id ? "border-vest text-zinc-50" : "border-transparent text-zinc-400 hover:text-zinc-100"
-                )}
-              >
-                <Icon size={17} />
-                {label}
-              </button>
-            ))}
-          </nav>
+    <div className="min-h-dvh md:grid md:grid-cols-[260px_1fr]">
+      {/* Mac / iPad: sidebar */}
+      <aside className="sticky top-0 hidden h-dvh flex-col bg-zinc-925 px-3 pb-6 pt-6 md:flex" style={{ boxShadow: "inset -0.5px 0 0 rgb(84 84 88 / 0.65)" }}>
+        <div className="mb-6 flex items-center gap-2.5 px-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-vest text-vest-ink">
+            <ShieldCheck size={18} strokeWidth={2.4} />
+          </span>
+          <span className="text-[17px] font-semibold text-zinc-50">ShiftDesk</span>
         </div>
-      </header>
-
-      <main className="mx-auto max-w-[1500px] space-y-5 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 md:pb-10 md:pt-6">
-        {!hydrated ? (
-          <Skeleton />
-        ) : (
-          <>
-            {tab === "roster" && (
-              <>
-                <SummaryMetricsBar />
-                <WeeklyRosterView onAdd={openAdd} onEdit={openEdit} />
-              </>
-            )}
-            {tab === "pay" && <PaySummaryView onEdit={openEdit} />}
-            {tab === "employers" && <EmployersView />}
-          </>
+        <nav className="space-y-0.5" aria-label="Main">
+          {TABS.map(({ id, title, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => changeTab(id)}
+              aria-current={tab === id ? "page" : undefined}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-[10px] px-2.5 py-2 text-left text-[15px] transition-colors",
+                tab === id ? "bg-zinc-800 font-semibold text-zinc-50" : "text-zinc-300 hover:bg-zinc-900"
+              )}
+            >
+              <Icon size={19} className={tab === id ? "text-vest" : "text-zinc-400"} />
+              {title}
+            </button>
+          ))}
+        </nav>
+        {hydrated && (
+          <button
+            onClick={() => openAdd(addDate)}
+            className="mt-auto flex h-11 items-center justify-center gap-2 rounded-full bg-vest text-[17px] font-semibold text-vest-ink active:opacity-70"
+          >
+            <Plus size={19} strokeWidth={2.6} /> New Shift
+          </button>
         )}
-      </main>
+      </aside>
 
-      {/* Mobile: floating add, within thumb reach */}
+      <div className="min-w-0">
+        {/* Phone: translucent nav bar with inline title once scrolled */}
+        <header className={cn("material sticky top-0 z-40 pt-[env(safe-area-inset-top)] transition-shadow md:hidden", collapsed && "hairline")}>
+          <div className="relative flex h-11 items-center justify-center px-4">
+            <span className={cn("text-[17px] font-semibold text-zinc-50 transition-opacity", collapsed ? "opacity-100" : "opacity-0")}>
+              {current.short}
+            </span>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-[1200px] px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 md:px-10 md:pb-12 md:pt-8">
+          <h1 ref={titleRef} className="large-title mb-4 mt-1 text-zinc-50 md:mb-6 md:mt-0">
+            {current.title}
+          </h1>
+          {!hydrated ? (
+            <Skeleton />
+          ) : (
+            <div className="space-y-6">
+              {tab === "roster" && (
+                <>
+                  <SummaryMetricsBar />
+                  <WeeklyRosterView onAdd={openAdd} onEdit={openEdit} />
+                </>
+              )}
+              {tab === "pay" && <PaySummaryView onEdit={openEdit} />}
+              {tab === "employers" && <EmployersView />}
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Phone: floating add */}
       {hydrated && tab === "roster" && !modal.open && (
         <button
           onClick={() => openAdd(addDate)}
-          className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-14 items-center gap-2 rounded-2xl bg-vest pl-4 pr-5 font-semibold text-vest-ink shadow-xl shadow-black/40 active:scale-95 md:hidden"
+          aria-label="New shift"
+          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-vest text-vest-ink shadow-[0_8px_24px_rgb(0_0_0/0.5)] active:scale-95 md:hidden"
         >
-          <Plus size={20} strokeWidth={2.6} /> Add shift
+          <Plus size={26} strokeWidth={2.6} />
         </button>
       )}
 
-      {/* Mobile bottom tab bar */}
-      <nav
-        className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-zinc-800 bg-zinc-950/95 backdrop-blur-md md:hidden"
-        aria-label="Main"
-      >
-        <div className="grid h-16 grid-cols-3">
+      {/* Phone: iOS tab bar */}
+      <nav className="material hairline-t pb-safe fixed inset-x-0 bottom-0 z-40 md:hidden" aria-label="Main">
+        <div className="grid h-[50px] grid-cols-3">
           {TABS.map(({ id, short, icon: Icon }) => (
             <button
               key={id}
               onClick={() => changeTab(id)}
               aria-current={tab === id ? "page" : undefined}
-              className={cn("relative flex flex-col items-center justify-center gap-1 text-xs font-medium", tab === id ? "text-zinc-50" : "text-zinc-500")}
+              className={cn("flex flex-col items-center justify-center gap-0.5 pt-1 text-[10px] font-medium", tab === id ? "text-vest" : "text-zinc-500")}
             >
-              {tab === id && <span className="absolute top-0 h-0.5 w-10 rounded-full bg-vest" />}
-              <Icon size={22} strokeWidth={tab === id ? 2.3 : 1.8} className={tab === id ? "text-vest" : ""} />
+              <Icon size={24} strokeWidth={tab === id ? 2.2 : 1.8} />
               {short}
             </button>
           ))}
@@ -149,11 +177,11 @@ export function AppShell() {
 function Skeleton() {
   return (
     <div className="animate-pulse space-y-4" aria-busy="true" aria-label="Loading roster">
-      <div className="h-36 rounded-xl bg-zinc-900" />
-      <div className="h-10 w-72 rounded-lg bg-zinc-900" />
+      <div className="h-44 rounded-2xl bg-zinc-900" />
+      <div className="h-24 rounded-2xl bg-zinc-900" />
       <div className="space-y-2">
-        {Array.from({ length: 7 }).map((_, i) => (
-          <div key={i} className="h-16 rounded-xl bg-zinc-900" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="h-16 rounded-2xl bg-zinc-900" />
         ))}
       </div>
     </div>
