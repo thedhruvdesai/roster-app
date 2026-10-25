@@ -2,10 +2,20 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ShiftDesk — Roster & Pay",
+  title: "ShiftDesk",
   description: "Personal roster, fatigue and pay tracker for casual security work across multiple employers.",
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/favicon.png", apple: "/apple-touch-icon.png" },
+  metadataBase: new URL("https://rosterme.netlify.app"),
+  icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/favicon.png", sizes: "48x48" }], apple: "/apple-touch-icon.png" },
+  openGraph: {
+    title: "ShiftDesk",
+    description: "Shifts, rest gaps and pay across every employer.",
+    url: "/",
+    siteName: "ShiftDesk",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "ShiftDesk" }],
+    type: "website",
+  },
+  twitter: { card: "summary_large_image", title: "ShiftDesk", description: "Shifts, rest gaps and pay across every employer.", images: ["/og.png"] },
   appleWebApp: { capable: true, title: "ShiftDesk", statusBarStyle: "black-translucent" },
 };
 

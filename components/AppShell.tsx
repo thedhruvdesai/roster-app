@@ -1,6 +1,7 @@
 "use client";
 
-import { Building2, CalendarDays, Plus, ShieldCheck, Wallet } from "lucide-react";
+import { Building2, CalendarDays, Plus, Wallet } from "lucide-react";
+import { Logo, LogoMark } from "./Logo";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { addDays, todayISO, weekDays } from "@/lib/dates";
 import { type Tab, useRoster } from "@/lib/store";
@@ -77,11 +78,8 @@ export function AppShell() {
     <div className="min-h-dvh md:grid md:grid-cols-[260px_1fr]">
       {/* Mac / iPad: sidebar */}
       <aside className="sticky top-0 hidden h-dvh flex-col bg-zinc-925 px-3 pb-6 pt-6 md:flex" style={{ boxShadow: "inset -0.5px 0 0 rgb(84 84 88 / 0.65)" }}>
-        <div className="mb-6 flex items-center gap-2.5 px-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-vest text-vest-ink">
-            <ShieldCheck size={18} strokeWidth={2.4} />
-          </span>
-          <span className="text-[17px] font-semibold text-zinc-50">ShiftDesk</span>
+        <div className="mb-7 px-2">
+          <Logo size={34} />
         </div>
         <nav className="space-y-0.5" aria-label="Main">
           {TABS.map(({ id, title, icon: Icon }) => (
@@ -113,6 +111,7 @@ export function AppShell() {
         {/* Phone: translucent nav bar with inline title once scrolled */}
         <header className={cn("material sticky top-0 z-40 pt-[env(safe-area-inset-top)] transition-shadow md:hidden", collapsed && "hairline")}>
           <div className="relative flex h-11 items-center justify-center px-4">
+            <LogoMark size={26} className="absolute left-4" />
             <span className={cn("text-[17px] font-semibold text-zinc-50 transition-opacity", collapsed ? "opacity-100" : "opacity-0")}>
               {current.short}
             </span>
