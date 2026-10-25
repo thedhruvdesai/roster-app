@@ -2,7 +2,7 @@
 
 import { AlertTriangle, BedDouble, CheckCircle2, Clock3 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { addDays, fmtDow } from "@/lib/dates";
+import { addDays, fmtDow, todayISO } from "@/lib/dates";
 import {
   LONG_SHIFT_HOURS,
   MIN_REST_HOURS,
@@ -16,6 +16,7 @@ import {
 } from "@/lib/pay";
 import { useRoster } from "@/lib/store";
 import { BADGE, cn } from "@/lib/ui";
+import { ShiftDial } from "./ShiftDial";
 
 function countdown(ms: number) {
   const mins = Math.max(0, Math.round(ms / 60_000));
@@ -77,7 +78,16 @@ export function SummaryMetricsBar() {
   return (
     <section aria-label="This week at a glance" className="space-y-5">
       {/* The board: the one big thing on the page */}
-      <div className={cn("relative overflow-hidden rounded-[22px] bg-zinc-900 p-5 sm:p-7", m.onNow && "ring-1 ring-inset ring-vest/50")}>
+      <div className={cn("relative grid items-center gap-6 overflow-hidden rounded-[28px] bg-zinc-900 p-5 sm:p-7 md:grid-cols-[auto_1fr] md:gap-10", m.onNow && "ring-1 ring-inset ring-vest/50")}>
+        <ShiftDial
+          shifts={shifts}
+          employers={employers}
+          now={now}
+          focus={focus}
+          centre={focus && fc ? countdown((m.onNow ? fc.endAt.getTime() : m.nextAt) - now) : "Free"}
+          caption={m.onNow ? "left on shift" : focus ? "until next shift" : "next 24 hours"}
+        />
+        <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <span className={cn("inline-flex items-center gap-2 text-[15px] font-semibold", m.onNow ? "text-vest" : "text-zinc-50")}>
             {m.onNow ? <span className="h-2 w-2 animate-pulse rounded-full bg-vest motion-reduce:animate-none" /> : <Clock3 size={15} />}
@@ -85,14 +95,14 @@ export function SummaryMetricsBar() {
           </span>
           {focus && (
             <span className="text-[15px] text-zinc-400">
-              {m.onNow ? `${countdown(fc!.endAt.getTime() - now)} to go` : `starts in ${countdown(m.nextAt - now)}`}
+              {fmtDow(focus.date)} {focus.date === todayISO() ? "today" : ""}
             </span>
           )}
         </div>
 
         {focus && fc ? (
           <>
-            <p className="type-board mt-3 text-[clamp(3.5rem,15vw,7.5rem)] text-zinc-50">
+            <p className="type-board mt-3 text-[clamp(3.5rem,15vw,6.25rem)] text-zinc-50 md:text-[clamp(3.5rem,7vw,6.25rem)]">
               <span className="block sm:inline">{focus.start}</span>
               <span className="mx-[0.12em] hidden font-light text-zinc-600 sm:inline-block" aria-label="to">–</span>
               <span className="block text-zinc-500 sm:inline sm:text-zinc-50">{focus.end}</span>
@@ -105,10 +115,7 @@ export function SummaryMetricsBar() {
                 </span>
               )}
               <span className="text-[15px] text-zinc-300">{focus.site}</span>
-              <span className="text-[15px] text-zinc-400">
-                {fmtDow(focus.date)}
-                {fc.overnight ? " into the next morning" : ""}
-              </span>
+              {fc.overnight && <span className="text-[15px] text-zinc-400">into the next morning</span>}
               <span className="ml-auto text-[20px] font-semibold text-zinc-50">{fmtMoney(fc.pay)}</span>
             </div>
             {progress !== null && (
@@ -120,6 +127,7 @@ export function SummaryMetricsBar() {
         ) : (
           <p className="type-board mt-3 text-[clamp(2.25rem,9vw,4rem)] text-zinc-500">Nothing booked</p>
         )}
+        </div>
       </div>
 
       {/* Week ledger: ruled columns, no boxes */}

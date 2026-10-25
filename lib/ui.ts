@@ -24,3 +24,15 @@ export const STATUS_STYLE = {
 } as const;
 
 export const cn = (...c: Array<string | false | null | undefined>) => c.filter(Boolean).join(" ");
+
+/** Hex values matching the Tailwind system colours, for SVG strokes */
+export const BADGE_HEX: Record<BadgeColor, string> = {
+  emerald: "#30D158",
+  sky: "#0A84FF",
+  amber: "#FF9F0A",
+  violet: "#BF5AF2",
+  rose: "#FF453A",
+  cyan: "#64D2FF",
+  orange: "#FF9F0A",
+  lime: "#63E6E2",
+};
