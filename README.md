@@ -34,6 +34,9 @@ components/
   PaySummaryView.tsx       period selector, KPIs, employer table, ledger, notes, export
   EmployersView.tsx        companies, sites, rate overrides, badge colours, backup
   FixedRosterPanel.tsx     fixed weekly shifts that auto-fill the roster
+  ShiftDial.tsx            24-hour clock of the next day of shifts
+  DialGlow.tsx             React Three Fiber particle glow behind the dial (lazy-loaded)
+  MenuSheet.tsx            hamburger menu: navigation, new shift, backup, install
   ui.tsx                   Button, badges, status pills, week navigator, form fields
 lib/
   types.ts                 Employer, Site, Shift, PaymentStatus, WeeklyPaySummary …

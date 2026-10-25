@@ -1,6 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
+import type { GlowArc } from "./DialGlow";
+
+// three.js only downloads after the page has painted, in its own chunk
+const DialGlow = dynamic(() => import("./DialGlow"), { ssr: false });
 import { calcShift } from "@/lib/pay";
 import type { Employer, Shift } from "@/lib/types";
 import { BADGE_HEX } from "@/lib/ui";
@@ -47,7 +52,7 @@ interface Props {
 export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Props) {
   const arcs = useMemo(() => {
     const end = now + 24 * H;
-    const out: { id: string; d: string; color: string; focus: boolean; label: string }[] = [];
+    const out: { id: string; d: string; color: string; focus: boolean; label: string; start: number; sweep: number }[] = [];
     for (const s of shifts) {
       const c = calcShift(s);
       let a = c.startAt.getTime();
@@ -63,10 +68,26 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
         color: e ? BADGE_HEX[e.color] : "#8E8E93",
         focus: isFocus,
         label: `${e?.code ?? "Shift"} ${s.start} to ${s.end}`,
+        start: angleOf(a),
+        sweep: Math.min(359.5, ((b - a) / H) * 15),
       });
     }
     return out;
   }, [shifts, employers, now, focus]);
+
+  // Round to whole degrees so the dust only re-scatters when a shift really changes
+  const glowKey = arcs.map((a) => `${Math.round(a.start)}:${Math.round(a.sweep)}:${a.color}`).join("|");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const glowArcs = useMemo<GlowArc[]>(() => arcs.map((a) => ({ start: a.start, sweep: a.sweep, color: a.color })), [glowKey]);
+
+  // Wait for first paint and a quiet moment before starting WebGL
+  const [glow, setGlow] = useState(false);
+  useEffect(() => {
+    const start = () => setGlow(true);
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(start, { timeout: 1500 });
+    else setTimeout(start, 400);
+  }, []);
 
   const nowDeg = angleOf(now);
   const [hx, hy] = point(nowDeg, R - W / 2 - 4);
@@ -74,9 +95,14 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
 
   return (
     <figure className="relative mx-auto w-[min(268px,76vw)] shrink-0" aria-label={`Next 24 hours: ${arcs.map((a) => a.label).join(", ") || "no shifts"}`}>
-      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="block h-auto w-full">
+      {glow && (
+        <div className="pointer-events-none absolute -inset-[15%]">
+          <DialGlow arcs={glowArcs} />
+        </div>
+      )}
+      <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="relative block h-auto w-full">
         {/* track */}
-        <circle cx={C} cy={C} r={R} fill="none" stroke="#2C2C2E" strokeWidth={W} />
+        <circle cx={C} cy={C} r={R} fill="none" stroke="#2C2C2E" strokeOpacity={0.6} strokeWidth={W} />
         {/* hour ticks */}
         {Array.from({ length: 24 }, (_, h) => {
           const major = h % 6 === 0;

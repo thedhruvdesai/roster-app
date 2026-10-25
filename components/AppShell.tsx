@@ -2,6 +2,7 @@
 
 import { Building2, CalendarDays, Plus, Wallet } from "lucide-react";
 import { Logo, LogoMark } from "./Logo";
+import { MenuButton } from "./MenuSheet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { addDays, todayISO, weekDays } from "@/lib/dates";
 import { type Tab, useRoster } from "@/lib/store";
@@ -112,6 +113,7 @@ export function AppShell() {
         <header className={cn("material sticky top-0 z-40 pt-[env(safe-area-inset-top)] transition-shadow md:hidden", collapsed && "hairline")}>
           <div className="relative flex h-11 items-center justify-center px-4">
             <LogoMark size={26} className="absolute left-4" />
+            {hydrated && <MenuButton onNewShift={() => openAdd(addDate)} className="absolute right-2" />}
             <span className={cn("text-[17px] font-semibold text-zinc-50 transition-opacity", collapsed ? "opacity-100" : "opacity-0")}>
               {current.short}
             </span>
@@ -119,9 +121,12 @@ export function AppShell() {
         </header>
 
         <main className="mx-auto max-w-[1200px] px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 md:px-10 md:pb-12 md:pt-8">
-          <h1 ref={titleRef} className="large-title mb-4 mt-1 text-zinc-50 md:mb-6 md:mt-0">
-            {current.title}
-          </h1>
+          <div className="mb-4 mt-1 flex items-center justify-between gap-4 md:mb-6 md:mt-0">
+            <h1 ref={titleRef} className="large-title text-zinc-50">
+              {current.title}
+            </h1>
+            {hydrated && <MenuButton onNewShift={() => openAdd(addDate)} className="hidden md:flex" />}
+          </div>
           {!hydrated ? (
             <Skeleton />
           ) : (
