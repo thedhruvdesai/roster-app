@@ -7,6 +7,7 @@ import { type Tab, useRoster } from "@/lib/store";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/ui";
 import { Logo } from "./Logo";
+import { THEMES } from "@/lib/themes";
 
 type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
 
@@ -38,7 +39,7 @@ export function MenuButton({ onNewShift, className }: { onNewShift: () => void; 
 }
 
 function MenuSheet({ onClose, onNewShift }: { onClose: () => void; onNewShift: () => void }) {
-  const { tab, setTab, employers, shifts, recurring } = useRoster();
+  const { tab, setTab, employers, shifts, recurring, theme, setTheme } = useRoster();
   const [install, setInstall] = useState<InstallEvent | null>(null);
   const [standalone, setStandalone] = useState(false);
 
@@ -103,6 +104,32 @@ function MenuSheet({ onClose, onNewShift }: { onClose: () => void; onNewShift: (
             </button>
           ))}
         </nav>
+
+        <div className="mx-5 my-4 h-px bg-zinc-700/60" />
+
+        <section className="px-5" aria-label="Theme">
+          <p className="mb-2.5 text-[13px] font-semibold text-zinc-400">Theme</p>
+          <div className="grid grid-cols-5 gap-2">
+            {THEMES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                aria-pressed={theme === t.id}
+                aria-label={`${t.name}: ${t.blurb}`}
+                className="group flex flex-col items-center gap-1.5"
+              >
+                <span
+                  className={cn("relative h-11 w-11 rounded-full transition-transform group-active:scale-90", theme === t.id ? "ring-2 ring-offset-2 ring-offset-zinc-900" : "ring-1 ring-white/10")}
+                  style={{ background: `radial-gradient(circle at 30% 25%, ${t.metal[0]}, ${t.metal[1]} 45%, ${t.metal[2]} 70%, ${t.ramp[9]} 71%)`, ...(theme === t.id ? { ["--tw-ring-color" as string]: t.accent } : {}) }}
+                >
+                  {theme === t.id && <Check size={16} className="absolute inset-0 m-auto" style={{ color: t.ink }} strokeWidth={3} />}
+                </span>
+                <span className={cn("text-[11px] leading-tight", theme === t.id ? "font-semibold text-zinc-50" : "text-zinc-400")}>{t.name}</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-[13px] text-zinc-500">{THEMES.find((t) => t.id === theme)?.blurb}</p>
+        </section>
 
         <div className="mx-5 my-4 h-px bg-zinc-700/60" />
 

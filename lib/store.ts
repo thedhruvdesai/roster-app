@@ -6,6 +6,7 @@ import { addDays, startOfWeek, todayISO } from "./dates";
 import { DEFAULT_EMPLOYERS, DEFAULT_RECURRING, SAI_EMPLOYER } from "./mock";
 import { calcShift } from "./pay";
 import type { Employer, ISODate, PaymentStatus, RecurringShift, Shift, WeekNote } from "./types";
+import type { ThemeId } from "./themes";
 
 export type Tab = "roster" | "pay" | "employers";
 
@@ -24,6 +25,8 @@ interface RosterState {
   weekNotes: Record<ISODate, WeekNote>;
 
   tab: Tab;
+  theme: ThemeId;
+  setTheme: (t: ThemeId) => void;
   weekStart: ISODate;
 
   setTab: (t: Tab) => void;
@@ -66,6 +69,8 @@ export const useRoster = create<RosterState>()(
     (set, get) => ({
       ...defaults(),
       tab: "roster",
+      theme: "onyx",
+      setTheme: (theme) => set({ theme }),
       weekStart: startOfWeek(todayISO()),
 
       setTab: (tab) => set({ tab }),
@@ -227,6 +232,7 @@ export const useRoster = create<RosterState>()(
         skipped: s.skipped,
         weekNotes: s.weekNotes,
         tab: s.tab,
+        theme: s.theme,
       }),
       merge: (persisted, current) => ({ ...current, ...(persisted as object), weekStart: startOfWeek(todayISO()) }),
     }

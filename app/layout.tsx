@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { themeCss } from "@/lib/themes";
 
 export const metadata: Metadata = {
   title: "ShiftDesk",
@@ -23,10 +24,18 @@ export const viewport: Viewport = { themeColor: "#000000", width: "device-width"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-AU">
+    <html lang="en-AU" data-theme="onyx" suppressHydrationWarning>
       <head>
         <link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="preload" href="/fonts/serif.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <style dangerouslySetInnerHTML={{ __html: themeCss() }} />
+        {/* Apply the saved theme before first paint so there is no flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var t=JSON.parse(localStorage.getItem('shiftdesk-roster-v2')||'{}').state;if(t&&t.theme)document.documentElement.dataset.theme=t.theme}catch(e){}",
+          }}
+        />
         <script
           dangerouslySetInnerHTML={{
             __html:

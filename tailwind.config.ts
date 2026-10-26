@@ -13,19 +13,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Neutral ramp comes from the active theme (lib/themes.ts)
         zinc: {
-          50: "#FFFFFF", // label
-          100: "#F2F2F7",
-          200: "#E5E5EA",
-          300: "#C7C7CC",
-          400: "#98989F", // secondaryLabel
-          500: "#6C6C70", // tertiaryLabel
-          600: "#48484A", // systemGray3
-          700: "#2E2E31", // separator
-          800: "#1E1E20", // raised control
-          900: "#111112", // onyx card
-          925: "#080808",
-          950: "#000000", // systemBackground
+          50: "rgb(var(--z50) / <alpha-value>)",
+          100: "rgb(var(--z100) / <alpha-value>)",
+          200: "rgb(var(--z200) / <alpha-value>)",
+          300: "rgb(var(--z300) / <alpha-value>)",
+          400: "rgb(var(--z400) / <alpha-value>)",
+          500: "rgb(var(--z500) / <alpha-value>)",
+          600: "rgb(var(--z600) / <alpha-value>)",
+          700: "rgb(var(--z700) / <alpha-value>)",
+          800: "rgb(var(--z800) / <alpha-value>)",
+          900: "rgb(var(--z900) / <alpha-value>)",
+          925: "rgb(var(--z925) / <alpha-value>)",
+          950: "rgb(var(--z950) / <alpha-value>)",
         },
         sky: sys("#0A84FF", "#409CFF"), // systemBlue
         orange: sys("#FF9F0A", "#FFB340"), // systemOrange
@@ -36,7 +37,7 @@ const config: Config = {
         cyan: sys("#64D2FF", "#8ADDFF"), // systemCyan
         amber: sys("#FF9F0A", "#FFB340"), // pending = systemOrange
         indigo: sys("#5E5CE6", "#7D7AFF"), // systemIndigo
-        vest: { DEFAULT: "#E9C46A", soft: "#F2D58E", ink: "#000000" }, // app tint: champagne gold, matches the mark
+        vest: { DEFAULT: "rgb(var(--accent) / <alpha-value>)", soft: "rgb(var(--accent-soft) / <alpha-value>)", ink: "rgb(var(--accent-ink) / <alpha-value>)" },
       },
       fontFamily: {
         sans: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "Inter", "system-ui", "Segoe UI", "Roboto", "sans-serif"],

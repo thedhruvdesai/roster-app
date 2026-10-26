@@ -9,6 +9,8 @@ const DialGlow = dynamic(() => import("./DialGlow"), { ssr: false });
 import { calcShift } from "@/lib/pay";
 import type { Employer, Shift } from "@/lib/types";
 import { BADGE_HEX } from "@/lib/ui";
+import { getTheme } from "@/lib/themes";
+import { useRoster } from "@/lib/store";
 
 const H = 3_600_000;
 const SIZE = 268;
@@ -89,6 +91,8 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
     else setTimeout(start, 400);
   }, []);
 
+  const halo = getTheme(useRoster((st) => st.theme)).accent;
+
   const nowDeg = angleOf(now);
   const [hx, hy] = point(nowDeg, R - W / 2 - 4);
   const [hx2, hy2] = point(nowDeg, R + W / 2 + 4);
@@ -97,23 +101,23 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
     <figure className="relative mx-auto w-[min(268px,76vw)] shrink-0" aria-label={`Next 24 hours: ${arcs.map((a) => a.label).join(", ") || "no shifts"}`}>
       {glow && (
         <div className="pointer-events-none absolute -inset-[15%]">
-          <DialGlow arcs={glowArcs} />
+          <DialGlow arcs={glowArcs} haloColor={halo} />
         </div>
       )}
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="relative block h-auto w-full">
         {/* track */}
-        <circle cx={C} cy={C} r={R} fill="none" stroke="#1E1E20" strokeOpacity={0.8} strokeWidth={W} />
+        <circle cx={C} cy={C} r={R} fill="none" style={{ stroke: "rgb(var(--z800))" }} strokeOpacity={0.8} strokeWidth={W} />
         {/* hour ticks */}
         {Array.from({ length: 24 }, (_, h) => {
           const major = h % 6 === 0;
           const [x0, y0] = point(h * 15, R + W / 2 + 4);
           const [x1, y1] = point(h * 15, R + W / 2 + (major ? 10 : 7));
-          return <line key={h} x1={x0} y1={y0} x2={x1} y2={y1} stroke={major ? "#E9C46A" : "#4A4335"} strokeWidth={major ? 2 : 1} strokeLinecap="round" />;
+          return <line key={h} x1={x0} y1={y0} x2={x1} y2={y1} style={{ stroke: major ? "rgb(var(--accent))" : "rgb(var(--accent) / 0.3)" }} strokeWidth={major ? 2 : 1} strokeLinecap="round" />;
         })}
         {[0, 6, 12, 18].map((h) => {
           const [x, y] = point(h * 15, R + W / 2 + 20);
           return (
-            <text key={h} x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="#C9A04B" fontSize="11" fontWeight="600">
+            <text key={h} x={x} y={y} textAnchor="middle" dominantBaseline="central" style={{ fill: "rgb(var(--accent) / 0.85)" }} fontSize="11" fontWeight="600">
               {String(h).padStart(2, "0")}
             </text>
           );
@@ -133,8 +137,8 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
           />
         ))}
         {/* now hand */}
-        <line x1={hx} y1={hy} x2={hx2} y2={hy2} stroke="#E9C46A" strokeWidth={3} strokeLinecap="round" />
-        <circle cx={hx} cy={hy} r={3.5} fill="#E9C46A" />
+        <line x1={hx} y1={hy} x2={hx2} y2={hy2} strokeWidth={3} style={{ stroke: "rgb(var(--accent))" }} strokeLinecap="round" />
+        <circle cx={hx} cy={hy} r={3.5} style={{ fill: "rgb(var(--accent))" }} />
       </svg>
       <figcaption className="absolute inset-0 flex flex-col items-center justify-center text-center">
         <span className="font-serif text-[38px] leading-none text-zinc-50">{centre}</span>

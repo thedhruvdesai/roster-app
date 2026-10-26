@@ -19,7 +19,7 @@ const DIST = 1 / RING_FRACTION / 2 / Math.tan(((FOV / 2) * Math.PI) / 180);
 /** Gaussian-ish random, so dust clusters on the ring and thins out at the edges */
 const g = () => (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
 
-function Dust({ arcs, still }: { arcs: GlowArc[]; still: boolean }) {
+function Dust({ arcs, still, haloColor }: { arcs: GlowArc[]; still: boolean; haloColor: string }) {
   const ring = useRef<THREE.Points>(null);
   const halo = useRef<THREE.Points>(null);
   const group = useRef<THREE.Group>(null);
@@ -83,7 +83,7 @@ function Dust({ arcs, still }: { arcs: GlowArc[]; still: boolean }) {
   return (
     <group ref={group}>
       <points ref={halo} geometry={haloGeo}>
-        <pointsMaterial size={1.8} sizeAttenuation={false} color="#E9C46A" transparent opacity={0.32} depthWrite={false} blending={THREE.AdditiveBlending} />
+        <pointsMaterial size={1.8} sizeAttenuation={false} color={haloColor} transparent opacity={0.32} depthWrite={false} blending={THREE.AdditiveBlending} />
       </points>
       <points ref={ring} geometry={shiftGeo}>
         <pointsMaterial size={3} sizeAttenuation={false} vertexColors transparent opacity={0.95} depthWrite={false} blending={THREE.AdditiveBlending} />
@@ -93,7 +93,7 @@ function Dust({ arcs, still }: { arcs: GlowArc[]; still: boolean }) {
 }
 
 /** WebGL glow behind the 24-hour dial. Loaded lazily; the SVG dial stays the source of truth. */
-export default function DialGlow({ arcs }: { arcs: GlowArc[] }) {
+export default function DialGlow({ arcs, haloColor = "#E9C46A" }: { arcs: GlowArc[]; haloColor?: string }) {
   const still = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   return (
     <Canvas
@@ -104,7 +104,7 @@ export default function DialGlow({ arcs }: { arcs: GlowArc[] }) {
       camera={{ fov: FOV, near: 0.1, far: 50, position: [0, 0, DIST] }}
       aria-hidden
     >
-      <Dust arcs={arcs} still={still} />
+      <Dust arcs={arcs} still={still} haloColor={haloColor} />
     </Canvas>
   );
 }

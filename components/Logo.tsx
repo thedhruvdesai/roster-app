@@ -18,7 +18,7 @@ export function LogoMark({ size = 32, tile = true, className }: { size?: number;
           <rect x="0.5" y="0.5" width="99" height="99" rx="22" fill="none" stroke="#FFFFFF" strokeOpacity="0.14" />
         </>
       )}
-      <path d="M66 34 A16 16 0 1 0 50 50" fill="none" stroke="#E9C46A" strokeWidth="11" strokeLinecap="round" />
+      <path d="M66 34 A16 16 0 1 0 50 50" fill="none" strokeWidth="11" style={{ stroke: "rgb(var(--accent))" }} strokeLinecap="round" />
       {/* thin cut where night crosses over day */}
       <path d="M50 50 A16 16 0 1 1 34 66" fill="none" stroke="#000" strokeWidth="17" strokeLinecap="round" />
       <path d="M50 50 A16 16 0 1 1 34 66" fill="none" stroke="#F2F2F7" strokeWidth="11" strokeLinecap="round" />

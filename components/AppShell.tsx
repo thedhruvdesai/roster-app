@@ -40,6 +40,10 @@ export function AppShell() {
   const recurring = useRoster((s) => s.recurring);
   const employers = useRoster((s) => s.employers);
   const ensureRecurring = useRoster((s) => s.ensureRecurring);
+  const theme = useRoster((s) => s.theme);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   // Materialise fixed-roster shifts for the viewed fortnight either side
   useEffect(() => {
