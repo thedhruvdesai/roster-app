@@ -5,7 +5,6 @@ import { themeCss } from "@/lib/themes";
 export const metadata: Metadata = {
   title: "ShiftDesk",
   description: "Personal roster, fatigue and pay tracker for casual security work across multiple employers.",
-  manifest: "/manifest.webmanifest",
   metadataBase: new URL("https://rosterme.netlify.app"),
   icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/favicon.png", sizes: "48x48" }], apple: "/apple-touch-icon.png" },
   openGraph: {
@@ -26,6 +25,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-AU" data-theme="base" suppressHydrationWarning>
       <head>
+        {/* use-credentials so the manifest still loads while the Netlify site is password/team protected */}
+        <link rel="manifest" href="/manifest.webmanifest" crossOrigin="use-credentials" />
         <link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <style dangerouslySetInnerHTML={{ __html: themeCss() }} />
         {/* Apply the saved theme before first paint so there is no flash */}
