@@ -30,10 +30,7 @@ export function EmployersView() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-display text-3xl font-semibold text-zinc-50">Employers & sites</h2>
-          <p className="text-sm text-zinc-500">Default rates here pre-fill every new shift. Site overrides win over the employer rate.</p>
-        </div>
+        <p className="max-w-md text-[15px] text-zinc-400">Default rates here pre-fill every new shift. Site overrides win over the employer rate.</p>
         <div className="flex items-center gap-2">
           {employers.some((e) => e.archived) && (
             <Button size="sm" variant="ghost" onClick={() => setShowArchived((v) => !v)}>
