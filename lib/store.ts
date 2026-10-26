@@ -69,7 +69,7 @@ export const useRoster = create<RosterState>()(
     (set, get) => ({
       ...defaults(),
       tab: "roster",
-      theme: "onyx",
+      theme: "signal",
       setTheme: (theme) => set({ theme }),
       weekStart: startOfWeek(todayISO()),
 
@@ -209,10 +209,10 @@ export const useRoster = create<RosterState>()(
     {
       // v2 key: starts fresh with real employers instead of the old demo data
       name: "shiftdesk-roster-v2",
-      version: 4,
+      version: 5,
       // Adds employers introduced after a device first saved its data, without touching anything else
       migrate: (persisted, version) => {
-        const st = (persisted ?? {}) as { employers?: Employer[] };
+        const st = (persisted ?? {}) as { employers?: Employer[]; theme?: ThemeId };
         if (version < 3 && Array.isArray(st.employers) && !st.employers.some((e) => e.id === SAI_EMPLOYER.id)) {
           st.employers = [...st.employers, SAI_EMPLOYER];
         }
@@ -222,6 +222,8 @@ export const useRoster = create<RosterState>()(
             e.id === SAI_EMPLOYER.id && e.defaultRate === 30 ? { ...e, defaultRate: SAI_EMPLOYER.defaultRate } : e
           );
         }
+        // v5: Signal becomes the default look; devices still on the old default move over
+        if (version < 5 && (!st.theme || st.theme === "onyx")) st.theme = "signal";
         return st as RosterState;
       },
       storage: createJSONStorage(() => localStorage),

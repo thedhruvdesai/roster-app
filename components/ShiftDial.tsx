@@ -98,7 +98,7 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
   const [hx2, hy2] = point(nowDeg, R + W / 2 + 4);
 
   return (
-    <figure className="relative mx-auto w-[min(268px,76vw)] shrink-0" aria-label={`Next 24 hours: ${arcs.map((a) => a.label).join(", ") || "no shifts"}`}>
+    <figure className="relative mx-auto w-full max-w-[268px] shrink-0" aria-label={`Next 24 hours: ${arcs.map((a) => a.label).join(", ") || "no shifts"}`}>
       {glow && (
         <div className="pointer-events-none absolute -inset-[15%]">
           <DialGlow arcs={glowArcs} haloColor={halo} />
@@ -141,7 +141,7 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
         <circle cx={hx} cy={hy} r={3.5} style={{ fill: "rgb(var(--accent))" }} />
       </svg>
       <figcaption className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="font-serif text-[46px] font-bold leading-none text-zinc-50">{centre}</span>
+        <span className="font-serif text-[34px] leading-none text-zinc-50">{centre}</span>
         <span className="mt-1.5 text-[13px] font-medium text-zinc-400">{caption}</span>
       </figcaption>
     </figure>

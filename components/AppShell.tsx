@@ -89,19 +89,18 @@ export function AppShell() {
             <span className="hidden md:inline-flex"><Logo size={32} /></span>
           </button>
 
-          <nav className="hidden h-full items-center gap-1 md:flex" aria-label="Main">
+          <nav className="hidden items-center gap-1 rounded-full bg-zinc-900 p-1 md:flex" aria-label="Main">
             {TABS.map(({ id, title }) => (
               <button
                 key={id}
                 onClick={() => changeTab(id)}
                 aria-current={tab === id ? "page" : undefined}
                 className={cn(
-                  "relative h-full px-3 text-[15px] transition-colors",
-                  tab === id ? "font-medium text-zinc-50" : "text-zinc-400 hover:text-zinc-100"
+                  "h-9 rounded-full px-4 text-[14px] font-medium transition-colors",
+                  tab === id ? "bg-zinc-50 text-zinc-950" : "text-zinc-400 hover:text-zinc-100"
                 )}
               >
                 {title}
-                {tab === id && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-vest" />}
               </button>
             ))}
           </nav>
@@ -136,7 +135,7 @@ export function AppShell() {
           <div className="space-y-10">
             {tab === "roster" && (
               <>
-                <SummaryMetricsBar />
+                <SummaryMetricsBar onAdd={() => openAdd(addDate)} onEdit={openEdit} onNav={changeTab} />
                 <WeeklyRosterView onAdd={openAdd} onEdit={openEdit} />
               </>
             )}
@@ -146,33 +145,37 @@ export function AppShell() {
         )}
       </main>
 
-      {/* Phone: floating add */}
-      {hydrated && tab === "roster" && !modal.open && (
-        <button
-          onClick={() => openAdd(addDate)}
-          aria-label="New shift"
-          className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-vest text-vest-ink shadow-[0_8px_24px_rgb(0_0_0/0.5)] active:scale-95 md:hidden"
-        >
-          <Plus size={26} strokeWidth={2.6} />
-        </button>
+      {/* Phone: floating capsule nav. Active icon sits in a conic ring; add sits in the middle. */}
+      {!modal.open && (
+        <nav className="pb-safe fixed inset-x-0 bottom-3 z-40 flex justify-center md:hidden" aria-label="Main">
+          <div className="flex items-center gap-1.5 rounded-full bg-zinc-900/90 p-1.5 shadow-[0_20px_50px_-12px_rgb(0_0_0/0.9)] ring-1 ring-white/[0.06] backdrop-blur-xl">
+            {[TABS[0], TABS[1], null, TABS[2]].map((t, i) =>
+              t ? (
+                <button
+                  key={t.id}
+                  onClick={() => changeTab(t.id)}
+                  aria-label={t.title}
+                  aria-current={tab === t.id ? "page" : undefined}
+                  className={cn("relative flex h-12 w-12 items-center justify-center rounded-full", tab === t.id ? "ring-active p-[1.5px]" : "")}
+                >
+                  <span className={cn("flex h-full w-full items-center justify-center rounded-full", tab === t.id ? "bg-zinc-900 text-zinc-50" : "bg-zinc-800 text-zinc-400")}>
+                    <t.icon size={20} strokeWidth={tab === t.id ? 2.2 : 1.8} />
+                  </span>
+                </button>
+              ) : (
+                <button
+                  key={`add-${i}`}
+                  onClick={() => hydrated && openAdd(addDate)}
+                  aria-label="New shift"
+                  className="bg-vest flex h-12 w-12 items-center justify-center rounded-full text-vest-ink active:scale-95"
+                >
+                  <Plus size={22} strokeWidth={2.6} />
+                </button>
+              )
+            )}
+          </div>
+        </nav>
       )}
-
-      {/* Phone: iOS tab bar */}
-      <nav className="material hairline-t pb-safe fixed inset-x-0 bottom-0 z-40 md:hidden" aria-label="Main">
-        <div className="grid h-[50px] grid-cols-3">
-          {TABS.map(({ id, short, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => changeTab(id)}
-              aria-current={tab === id ? "page" : undefined}
-              className={cn("flex flex-col items-center justify-center gap-0.5 pt-1 text-[10px] font-medium", tab === id ? "text-vest" : "text-zinc-500")}
-            >
-              <Icon size={24} strokeWidth={tab === id ? 2.2 : 1.8} />
-              {short}
-            </button>
-          ))}
-        </div>
-      </nav>
 
       {hydrated && <ShiftModal open={modal.open} shift={modal.shift} defaultDate={modal.date} onClose={close} />}
       <Toaster />

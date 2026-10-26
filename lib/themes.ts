@@ -3,7 +3,7 @@
  * opacity modifiers keep working), the accent, and the metallic gradient used on
  * primary buttons and money figures. Employer colours never change between themes.
  */
-export type ThemeId = "onyx" | "midnight" | "rose" | "platinum" | "aurora";
+export type ThemeId = "signal" | "onyx" | "midnight" | "rose" | "platinum" | "aurora";
 
 type Ramp = [string, string, string, string, string, string, string, string, string, string, string, string];
 // order: 50 100 200 300 400 500 600 700 800 900 925 950
@@ -16,10 +16,24 @@ export interface Theme {
   accent: string; // solid accent for text, hands, active states
   accentSoft: string;
   ink: string; // text on accent
-  metal: [string, string, string]; // light → mid → dark
+  metal: [string, string, string]; // light → mid → dark (primary buttons, money)
+  glow: [string, string, string]; // highlight card gradient
+  glowInk: string;
 }
 
 export const THEMES: Theme[] = [
+  {
+    id: "signal",
+    name: "Signal",
+    blurb: "Pure black, charcoal and signal green",
+    ramp: ["#FFFFFF", "#F2F2F2", "#E2E2E2", "#C4C4C4", "#9A9A9A", "#6B6B6B", "#3A3A3A", "#222222", "#161616", "#0D0D0D", "#070707", "#030303"],
+    accent: "#4CD07D",
+    accentSoft: "#86E3A8",
+    ink: "#000000",
+    metal: ["#FFFFFF", "#F4F4F4", "#DCDCDC"],
+    glow: ["#9AF5BC", "#3FC46C", "#14562C"],
+    glowInk: "#03140A",
+  },
   {
     id: "onyx",
     name: "Onyx",
@@ -29,6 +43,8 @@ export const THEMES: Theme[] = [
     accentSoft: "#F2D58E",
     ink: "#000000",
     metal: ["#F6E1A6", "#E9C46A", "#C9A04B"],
+    glow: ["#FBE7B0", "#E2B95A", "#5A4316"],
+    glowInk: "#140E00",
   },
   {
     id: "midnight",
@@ -39,6 +55,8 @@ export const THEMES: Theme[] = [
     accentSoft: "#C6DAFF",
     ink: "#03060D",
     metal: ["#E2ECFF", "#A7C7FF", "#6F93D9"],
+    glow: ["#DCE9FF", "#7FA6EE", "#1C2F58"],
+    glowInk: "#030A1A",
   },
   {
     id: "rose",
@@ -49,6 +67,8 @@ export const THEMES: Theme[] = [
     accentSoft: "#F2C3B5",
     ink: "#1A0D09",
     metal: ["#F8D6CB", "#E8A896", "#C07A66"],
+    glow: ["#FFDCD1", "#E39A86", "#5C2E24"],
+    glowInk: "#1A0905",
   },
   {
     id: "platinum",
@@ -59,6 +79,8 @@ export const THEMES: Theme[] = [
     accentSoft: "#FFFFFF",
     ink: "#000000",
     metal: ["#FFFFFF", "#D9DCE1", "#9EA3AB"],
+    glow: ["#FFFFFF", "#C9CDD3", "#3D4046"],
+    glowInk: "#060607",
   },
   {
     id: "aurora",
@@ -69,6 +91,8 @@ export const THEMES: Theme[] = [
     accentSoft: "#C5E8FF",
     ink: "#030209",
     metal: ["#8AF3FF", "#A9B6FF", "#B98CFF"],
+    glow: ["#9BF6FF", "#9C8CFF", "#2B1E63"],
+    glowInk: "#050312",
   },
 ];
 
@@ -90,8 +114,12 @@ export function themeCss() {
       `--metal-1:${t.metal[0]}`,
       `--metal-2:${t.metal[1]}`,
       `--metal-3:${t.metal[2]}`,
+      `--glow-1:${t.glow[0]}`,
+      `--glow-2:${t.glow[1]}`,
+      `--glow-3:${t.glow[2]}`,
+      `--glow-ink:${t.glowInk}`,
     ].join(";");
-    return `${t.id === "onyx" ? ":root," : ""}[data-theme="${t.id}"]{${vars}}`;
+    return `${t.id === "signal" ? ":root," : ""}[data-theme="${t.id}"]{${vars}}`;
   }).join("\n");
 }
 

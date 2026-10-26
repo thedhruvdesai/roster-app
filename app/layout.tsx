@@ -24,10 +24,9 @@ export const viewport: Viewport = { themeColor: "#000000", width: "device-width"
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-AU" data-theme="onyx" suppressHydrationWarning>
+    <html lang="en-AU" data-theme="signal" suppressHydrationWarning>
       <head>
-        <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
-        <link rel="preload" href="/fonts/display.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/figtree.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <style dangerouslySetInnerHTML={{ __html: themeCss() }} />
         {/* Apply the saved theme before first paint so there is no flash */}
         <script

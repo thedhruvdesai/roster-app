@@ -23,10 +23,10 @@ The app is a static export (`output: "export"`), so `npm run build` writes a pla
 
 ```
 app/
-  layout.tsx               Geist + Big Shoulders Display (self-hosted), themes, metadata
+  layout.tsx               Figtree (self-hosted), Signal and gem themes, metadata
   page.tsx                 renders <AppShell/>
 components/
-  AppShell.tsx             website top bar, phone tab bar, hydration gate, shift modal host
+  AppShell.tsx             top bar with pill nav, floating capsule nav on phones, shift modal host
   SummaryMetricsBar.tsx    38h meter, rest-gap alerts, long-shift flag, projected pay
   WeeklyRosterView.tsx     Mon–Sun grid, per-day totals, add/edit/duplicate/delete
   ShiftCard.tsx            badge, venue, times, overnight +1, net hrs, $, rest warning
@@ -35,6 +35,7 @@ components/
   EmployersView.tsx        companies, sites, rate overrides, badge colours, backup
   FixedRosterPanel.tsx     fixed weekly shifts that auto-fill the roster
   ShiftDial.tsx            24-hour clock of the next day of shifts
+  WeekCharts.tsx           weekly hours gauge and earnings-by-day line chart
   DialGlow.tsx             React Three Fiber particle glow behind the dial (lazy-loaded)
   MenuSheet.tsx            hamburger menu: navigation, new shift, backup, install
   ui.tsx                   Button, badges, status pills, week navigator, form fields
