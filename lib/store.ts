@@ -212,7 +212,7 @@ export const useRoster = create<RosterState>()(
       version: 7,
       // Adds employers introduced after a device first saved its data, without touching anything else
       migrate: (persisted, version) => {
-        const st = (persisted ?? {}) as { employers?: Employer[]; theme?: ThemeId };
+        const st = (persisted ?? {}) as { employers?: Employer[]; theme?: string };
         if (version < 3 && Array.isArray(st.employers) && !st.employers.some((e) => e.id === SAI_EMPLOYER.id)) {
           st.employers = [...st.employers, SAI_EMPLOYER];
         }
