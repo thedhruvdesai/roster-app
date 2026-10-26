@@ -21,10 +21,10 @@ const config: Config = {
           400: "#98989F", // secondaryLabel
           500: "#6C6C70", // tertiaryLabel
           600: "#48484A", // systemGray3
-          700: "#3A3A3C", // systemGray4 / opaque separator
-          800: "#2C2C2E", // tertiarySystemBackground
-          900: "#1C1C1E", // secondarySystemBackground (grouped cells)
-          925: "#121214",
+          700: "#2E2E31", // separator
+          800: "#1E1E20", // raised control
+          900: "#111112", // onyx card
+          925: "#080808",
           950: "#000000", // systemBackground
         },
         sky: sys("#0A84FF", "#409CFF"), // systemBlue
@@ -41,6 +41,7 @@ const config: Config = {
       fontFamily: {
         sans: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "Inter", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
         display: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', "Inter", "system-ui", "sans-serif"],
+        serif: ["Instrument Serif", "Georgia", "serif"],
         mono: ["-apple-system", "BlinkMacSystemFont", "Inter", "system-ui", "sans-serif"],
       },
     },

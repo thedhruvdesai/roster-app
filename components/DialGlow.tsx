@@ -83,7 +83,7 @@ function Dust({ arcs, still }: { arcs: GlowArc[]; still: boolean }) {
   return (
     <group ref={group}>
       <points ref={halo} geometry={haloGeo}>
-        <pointsMaterial size={1.8} sizeAttenuation={false} color="#AEAEB2" transparent opacity={0.45} depthWrite={false} blending={THREE.AdditiveBlending} />
+        <pointsMaterial size={1.8} sizeAttenuation={false} color="#E9C46A" transparent opacity={0.32} depthWrite={false} blending={THREE.AdditiveBlending} />
       </points>
       <points ref={ring} geometry={shiftGeo}>
         <pointsMaterial size={3} sizeAttenuation={false} vertexColors transparent opacity={0.95} depthWrite={false} blending={THREE.AdditiveBlending} />

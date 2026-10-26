@@ -102,18 +102,18 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
       )}
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="relative block h-auto w-full">
         {/* track */}
-        <circle cx={C} cy={C} r={R} fill="none" stroke="#2C2C2E" strokeOpacity={0.6} strokeWidth={W} />
+        <circle cx={C} cy={C} r={R} fill="none" stroke="#1E1E20" strokeOpacity={0.8} strokeWidth={W} />
         {/* hour ticks */}
         {Array.from({ length: 24 }, (_, h) => {
           const major = h % 6 === 0;
           const [x0, y0] = point(h * 15, R + W / 2 + 4);
           const [x1, y1] = point(h * 15, R + W / 2 + (major ? 10 : 7));
-          return <line key={h} x1={x0} y1={y0} x2={x1} y2={y1} stroke={major ? "#8E8E93" : "#48484A"} strokeWidth={major ? 2 : 1} strokeLinecap="round" />;
+          return <line key={h} x1={x0} y1={y0} x2={x1} y2={y1} stroke={major ? "#E9C46A" : "#4A4335"} strokeWidth={major ? 2 : 1} strokeLinecap="round" />;
         })}
         {[0, 6, 12, 18].map((h) => {
           const [x, y] = point(h * 15, R + W / 2 + 20);
           return (
-            <text key={h} x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="#8E8E93" fontSize="11" fontWeight="600">
+            <text key={h} x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="#C9A04B" fontSize="11" fontWeight="600">
               {String(h).padStart(2, "0")}
             </text>
           );
@@ -137,7 +137,7 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
         <circle cx={hx} cy={hy} r={3.5} fill="#E9C46A" />
       </svg>
       <figcaption className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="text-[28px] font-bold leading-none tracking-tight text-zinc-50">{centre}</span>
+        <span className="font-serif text-[38px] leading-none text-zinc-50">{centre}</span>
         <span className="mt-1.5 text-[13px] font-medium text-zinc-400">{caption}</span>
       </figcaption>
     </figure>

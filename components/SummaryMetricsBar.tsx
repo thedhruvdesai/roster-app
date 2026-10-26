@@ -102,7 +102,7 @@ export function SummaryMetricsBar() {
 
         {focus && fc ? (
           <>
-            <p className="type-board mt-3 text-[clamp(3.5rem,15vw,6.25rem)] text-zinc-50 md:text-[clamp(3.5rem,7vw,6.25rem)]">
+            <p className="type-board mt-3 text-[clamp(4.5rem,21vw,8.5rem)] text-zinc-50 md:text-[clamp(4.5rem,9vw,8.5rem)]">
               <span className="block sm:inline">{focus.start}</span>
               <span className="mx-[0.12em] hidden font-light text-zinc-600 sm:inline-block" aria-label="to">–</span>
               <span className="block text-zinc-500 sm:inline sm:text-zinc-50">{focus.end}</span>
@@ -116,7 +116,7 @@ export function SummaryMetricsBar() {
               )}
               <span className="text-[15px] text-zinc-300">{focus.site}</span>
               {fc.overnight && <span className="text-[15px] text-zinc-400">into the next morning</span>}
-              <span className="ml-auto text-[20px] font-semibold text-zinc-50">{fmtMoney(fc.pay)}</span>
+              <span className="text-gold-grad ml-auto font-serif text-[30px] leading-none">{fmtMoney(fc.pay)}</span>
             </div>
             {progress !== null && (
               <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-zinc-700" aria-label={`${Math.round(progress)}% of shift done`}>
@@ -138,7 +138,7 @@ export function SummaryMetricsBar() {
             <span>{m.pay.shiftCount} shifts</span>
           </dt>
           <dd className="mt-1 flex items-baseline gap-2">
-            <span className="text-[34px] font-bold leading-none text-zinc-50">{fmtHours(hours).replace("h", "")}</span>
+            <span className="font-serif text-[48px] leading-none text-zinc-50">{fmtHours(hours).replace("h", "")}</span>
             <span className="text-zinc-500">of {WEEKLY_HOURS_LIMIT}h</span>
           </dd>
           <div className="relative mt-3 h-1.5 rounded-full bg-zinc-700">
@@ -154,12 +154,12 @@ export function SummaryMetricsBar() {
           <dt className="flex items-center gap-1.5 text-[13px] font-semibold text-zinc-400"><BedDouble size={15} /> Rest gaps</dt>
           {m.rest.length ? (
             <dd>
-              <p className="mt-1 flex items-center gap-2 text-[22px] font-bold text-rose-300"><AlertTriangle size={20} /> {m.rest.length} short</p>
+              <p className="mt-1 flex items-center gap-2 font-serif text-[30px] leading-tight text-rose-300"><AlertTriangle size={20} /> {m.rest.length} short</p>
               <p className="mt-1 text-sm text-rose-200/80">Tightest {minGap! < 0 ? "overlaps" : `is ${fmtHours(minGap!)}`}</p>
             </dd>
           ) : (
             <dd>
-              <p className="mt-1 flex items-center gap-2 text-[22px] font-bold text-emerald-300"><CheckCircle2 size={20} /> Clear</p>
+              <p className="mt-1 flex items-center gap-2 font-serif text-[30px] leading-tight text-emerald-300"><CheckCircle2 size={20} /> Clear</p>
               <p className="mt-1 text-sm text-zinc-400">All gaps {MIN_REST_HOURS}h+</p>
             </dd>
           )}
@@ -168,13 +168,13 @@ export function SummaryMetricsBar() {
 
         <div className="rounded-2xl bg-zinc-900 p-4">
           <dt className="text-[13px] font-semibold text-zinc-400">Week&apos;s pay</dt>
-          <dd className="mt-1 text-[22px] font-bold text-zinc-50">{fmtMoney(m.pay.grossProjected)}</dd>
+          <dd className="text-gold-grad mt-1 font-serif text-[32px] leading-tight">{fmtMoney(m.pay.grossProjected)}</dd>
           <dd className="mt-1 text-sm text-zinc-400">before tax</dd>
         </div>
 
         <div className="col-span-2 rounded-2xl bg-zinc-900 p-4 lg:col-span-1">
           <dt className="text-[13px] font-semibold text-zinc-400">Already worked</dt>
-          <dd className="mt-1 text-[22px] font-bold text-emerald-300">{fmtMoney(m.pay.verified)}</dd>
+          <dd className="mt-1 font-serif text-[32px] leading-tight text-emerald-300">{fmtMoney(m.pay.verified)}</dd>
           <dd className="mt-1 text-sm text-zinc-400">{fmtMoney(m.pay.grossProjected - m.pay.verified)} still to work</dd>
         </div>
       </dl>
