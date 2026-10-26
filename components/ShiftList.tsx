@@ -5,6 +5,9 @@ import { fmtAU, fmtDayNum, fmtDow, todayISO } from "@/lib/dates";
 import { calcShift, fmtHours, fmtMoney } from "@/lib/pay";
 import type { Employer, ISODate, RestWarning, Shift } from "@/lib/types";
 import { BADGE, STATUS_STYLE, cn } from "@/lib/ui";
+import { motion } from "motion/react";
+
+const SPRING = { type: "spring", stiffness: 380, damping: 32, mass: 0.8 } as const;
 
 const FULL: Record<string, string> = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday" };
 const STATUS_SHORT = { scheduled: "Scheduled", worked: "Pending pay", paid: "Paid" } as const;
@@ -33,11 +36,18 @@ export function ShiftList({
   const today = todayISO();
   return (
     <div className="space-y-6">
-      {rows.map((r) => {
+      {rows.map((r, di) => {
         const isToday = r.date === today;
         const label = isToday ? "Today" : FULL[fmtDow(r.date)];
         return (
-          <section key={r.date} id={`day-${r.date}`} className="scroll-mt-20">
+          <motion.section
+            key={r.date}
+            id={`day-${r.date}`}
+            className="scroll-mt-20"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...SPRING, delay: di * 0.045 }}
+          >
             <div className="mb-2 flex items-end justify-between gap-3 px-1">
               <div>
                 <h3 className={cn("text-[20px] font-bold tracking-tight", r.date < today && !isToday ? "text-zinc-500" : "text-zinc-50")}>
@@ -51,13 +61,15 @@ export function ShiftList({
                     {fmtHours(r.hours)} · {fmtMoney(r.pay)}
                   </span>
                 )}
-                <button
+                <motion.button
                   onClick={() => onAdd(r.date)}
                   aria-label={`Add shift on ${label} ${fmtAU(r.date)}`}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-50 active:opacity-60"
+                  whileTap={{ scale: 0.85, rotate: 90 }}
+                  transition={SPRING}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-800 text-zinc-50"
                 >
                   <Plus size={16} />
-                </button>
+                </motion.button>
               </div>
             </div>
 
@@ -77,7 +89,12 @@ export function ShiftList({
                   const rest = restByShift.get(s.id);
                   return (
                     <li key={s.id} className={cn(i > 0 && "border-t border-zinc-800")}>
-                      <button onClick={() => onEdit(s)} className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-zinc-800/50 active:bg-zinc-800">
+                      <motion.button
+                        onClick={() => onEdit(s)}
+                        whileTap={{ scale: 0.97 }}
+                        transition={SPRING}
+                        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-zinc-800/50"
+                      >
                         <span className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-zinc-800">
                           <span className="text-[19px] font-bold leading-none text-zinc-50">{e?.name.charAt(0) ?? "?"}</span>
                           <span className={cn("mt-1.5 h-1 w-5 rounded-full", e ? BADGE[e.color].bar : "bg-zinc-500")} />
@@ -112,13 +129,13 @@ export function ShiftList({
                           <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", STATUS_STYLE[s.status])}>{STATUS_SHORT[s.status]}</span>
                         </span>
                         <ChevronRight size={18} className="hidden shrink-0 text-zinc-600 sm:block" />
-                      </button>
+                      </motion.button>
                     </li>
                   );
                 })}
               </ul>
             )}
-          </section>
+          </motion.section>
         );
       })}
     </div>

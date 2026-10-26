@@ -10,6 +10,9 @@ import type { Employer, ISODate, RestWarning, Shift } from "@/lib/types";
 import { BADGE, cn } from "@/lib/ui";
 import { ShiftCard } from "./ShiftCard";
 import { ShiftList } from "./ShiftList";
+import { AnimatePresence, motion } from "motion/react";
+
+const SPRING = { type: "spring", stiffness: 420, damping: 34, mass: 0.8 } as const;
 import { Button, EmptyState, WeekNavigator } from "./ui";
 
 interface Props {
@@ -63,6 +66,13 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
       return "list";
     }
   });
+  // Remember which way the week moved so content slides the right way
+  const prevWeek = useRef(weekStart);
+  const dir = weekStart > prevWeek.current ? 1 : weekStart < prevWeek.current ? -1 : 0;
+  useEffect(() => {
+    prevWeek.current = weekStart;
+  }, [weekStart]);
+
   const pickView = (v: "list" | "timeline") => {
     setView(v);
     try {
@@ -146,15 +156,16 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
               role="tab"
               aria-selected={view === v}
               onClick={() => pickView(v)}
-              className={cn("h-9 rounded-full px-4 text-[14px] font-semibold capitalize transition-colors", view === v ? "bg-zinc-50 text-zinc-950" : "text-zinc-400")}
+              className={cn("relative h-9 rounded-full px-4 text-[14px] font-semibold capitalize transition-colors duration-200", view === v ? "text-zinc-950" : "text-zinc-400")}
             >
-              {v}
+              {view === v && <motion.span layoutId="view-pill" transition={SPRING} className="absolute inset-0 rounded-full bg-zinc-50" />}
+              <span className="relative">{v}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <WeekGlance rows={data.rows} today={today} empById={data.empById} />
+      <WeekGlance key={weekStart} rows={data.rows} today={today} empById={data.empById} />
 
       {data.weekCount === 0 && (
         <EmptyState
@@ -169,6 +180,15 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
         />
       )}
 
+      <AnimatePresence mode="wait" initial={false} custom={dir}>
+      <motion.div
+        key={`${view}-${weekStart}`}
+        custom={dir}
+        initial={{ opacity: 0, x: dir * 48, y: dir === 0 ? 12 : 0 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        exit={{ opacity: 0, x: dir * -48, y: dir === 0 ? -8 : 0 }}
+        transition={SPRING}
+      >
       {view === "list" ? (
         <ShiftList rows={data.rows} empById={data.empById} restByShift={data.restByShift} onAdd={onAdd} onEdit={onEdit} />
       ) : (
@@ -273,6 +293,8 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
           <Legend />
         </>
       )}
+      </motion.div>
+      </AnimatePresence>
     </section>
   );
 }
@@ -384,38 +406,48 @@ type Row = { date: ISODate; own: Shift[]; hours: number };
 /** Phone-only 7-day overview: tap a day to jump to it. */
 function WeekGlance({ rows, today, empById }: { rows: Row[]; today: ISODate; empById: Map<string, Employer> }) {
   const max = Math.max(12, ...rows.map((r) => r.hours));
+  const [picked, setPicked] = useState<ISODate>(() => (rows.some((r) => r.date === today) ? today : rows[0].date));
   return (
     <div className="grid grid-cols-7 gap-1 md:hidden">
-      {rows.map((r) => {
+      {rows.map((r, i) => {
         const isToday = r.date === today;
+        const on = picked === r.date;
         return (
-          <button
+          <motion.button
             key={r.date}
-            onClick={() => document.getElementById(`day-${r.date}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
-            className={cn(
-              "flex flex-col items-center rounded-lg border px-0.5 pb-1.5 pt-1.5",
-              isToday ? "border-vest/60 bg-vest/10" : "border-zinc-800 bg-zinc-900"
-            )}
+            whileTap={{ scale: 0.92 }}
+            transition={SPRING}
+            onClick={() => {
+              setPicked(r.date);
+              document.getElementById(`day-${r.date}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="relative flex flex-col items-center rounded-xl px-0.5 pb-1.5 pt-1.5"
             aria-label={`${fmtDow(r.date)} ${fmtDayNum(r.date)}, ${r.own.length} shifts`}
+            aria-pressed={on}
           >
-            <span className={cn("text-xs", isToday ? "text-vest" : "text-zinc-400")}>{fmtDow(r.date).slice(0, 2)}</span>
-            <span className={cn("font-display text-xl font-semibold leading-tight", isToday ? "text-vest" : r.own.length ? "text-zinc-50" : "text-zinc-600")}>
+            {/* the selection is one shape that glides between days */}
+            <span className="absolute inset-0 rounded-xl bg-zinc-900" />
+            {on && <motion.span layoutId="day-pick" transition={SPRING} className="absolute inset-0 rounded-xl bg-zinc-50/[0.08] ring-1 ring-inset ring-zinc-50/70" />}
+            <span className={cn("relative text-xs", isToday ? "text-vest" : "text-zinc-400")}>{fmtDow(r.date).slice(0, 2)}</span>
+            <span className={cn("relative text-xl font-semibold leading-tight", isToday ? "text-vest" : r.own.length ? "text-zinc-50" : "text-zinc-600")}>
               {fmtDayNum(r.date)}
             </span>
-            <span className="mt-1 flex h-8 w-2.5 flex-col-reverse overflow-hidden rounded-full bg-zinc-800">
+            <span className="relative mt-1 flex h-8 w-2.5 flex-col-reverse overflow-hidden rounded-full bg-zinc-800">
               {r.own.map((s) => {
                 const e = empById.get(s.employerId);
                 return (
-                  <span
+                  <motion.span
                     key={s.id}
                     className={e ? BADGE[e.color].bar : "bg-zinc-500"}
-                    style={{ height: `${(calcShift(s).netHours / max) * 100}%` }}
+                    initial={{ height: 0 }}
+                    animate={{ height: `${(calcShift(s).netHours / max) * 100}%` }}
+                    transition={{ ...SPRING, delay: 0.05 + i * 0.04 }}
                   />
                 );
               })}
             </span>
-            <span className="mt-1 font-display text-xs text-zinc-400">{r.own.length ? fmtHours(r.hours) : "–"}</span>
-          </button>
+            <span className="relative mt-1 text-xs text-zinc-400">{r.own.length ? fmtHours(r.hours) : "–"}</span>
+          </motion.button>
         );
       })}
     </div>

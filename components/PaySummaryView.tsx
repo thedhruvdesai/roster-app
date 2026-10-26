@@ -11,6 +11,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { motion } from "motion/react";
 import { addDays, fmtAU, fmtDow, fmtRange } from "@/lib/dates";
 import {
   buildPaySummary,
@@ -74,11 +75,14 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
               key={m}
               onClick={() => setMode(m)}
               className={cn(
-                "h-10 flex-1 rounded-full px-5 text-[15px] font-semibold capitalize transition-colors sm:flex-none",
-                mode === m ? "bg-zinc-50 text-zinc-950" : "text-zinc-400"
+                "relative h-10 flex-1 rounded-full px-5 text-[15px] font-semibold capitalize transition-colors duration-200 sm:flex-none",
+                mode === m ? "text-zinc-950" : "text-zinc-400"
               )}
             >
-              {m === "custom" ? "Range" : m}
+              {mode === m && (
+                <motion.span layoutId="period-pill" transition={{ type: "spring", stiffness: 420, damping: 34, mass: 0.8 }} className="absolute inset-0 rounded-full bg-zinc-50" />
+              )}
+              <span className="relative">{m === "custom" ? "Range" : m}</span>
             </button>
           ))}
         </div>

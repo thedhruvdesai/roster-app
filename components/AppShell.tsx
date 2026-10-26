@@ -3,6 +3,7 @@
 import { Building2, CalendarDays, Plus, Wallet } from "lucide-react";
 import { Logo, LogoMark } from "./Logo";
 import { MenuButton } from "./MenuSheet";
+import { MotionConfig } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { addDays, todayISO, weekDays } from "@/lib/dates";
 import { type Tab, useRoster } from "@/lib/store";
@@ -80,6 +81,7 @@ export function AppShell() {
   const current = TABS.find((t) => t.id === tab)!;
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="min-h-dvh">
       {/* Website-style top bar: logo, sections, primary action, menu */}
       <header className={cn("material sticky top-0 z-40 pt-[env(safe-area-inset-top)] transition-shadow", collapsed && "hairline")}>
@@ -170,6 +172,7 @@ export function AppShell() {
       {hydrated && <ShiftModal open={modal.open} shift={modal.shift} defaultDate={modal.date} onClose={close} />}
       <Toaster />
     </div>
+    </MotionConfig>
   );
 }
 
