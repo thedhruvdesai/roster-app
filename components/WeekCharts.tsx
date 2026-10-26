@@ -93,3 +93,29 @@ export function EarningsChart({ shifts, weekStart, today }: { shifts: Shift[]; w
     </div>
   );
 }
+
+/** Uber Driver-style earnings bars: one bar per day, today highlighted, value on the active bar */
+export function EarningsBars({ shifts, weekStart, today }: { shifts: Shift[]; weekStart: ISODate; today: ISODate }) {
+  const days = weekDays(weekStart);
+  const data = days.map((d) => shifts.filter((s) => s.date === d).reduce((a, s) => a + calcShift(s).pay, 0));
+  const max = Math.max(1, ...data);
+  const focusIdx = days.includes(today) ? days.indexOf(today) : data.indexOf(max);
+  return (
+    <div className="grid grid-cols-7 items-end gap-2 sm:gap-3" style={{ height: 180 }} aria-label={`Pay by day: ${days.map((d, i) => `${fmtDow(d)} ${fmtMoney(data[i])}`).join(", ")}`}>
+      {days.map((d, i) => {
+        const h = data[i] ? Math.max(8, (data[i] / max) * 130) : 4;
+        const on = i === focusIdx;
+        return (
+          <div key={d} className="flex h-full flex-col items-center justify-end gap-2">
+            <span className={on ? "text-[12px] font-semibold text-zinc-50" : "text-[11px] text-zinc-500"}>{data[i] ? `$${Math.round(data[i])}` : ""}</span>
+            <span
+              className={on ? "bar-grow w-full rounded-[6px] bg-zinc-50" : "bar-grow w-full rounded-[6px] bg-zinc-700"}
+              style={{ height: h, animationDelay: `${i * 50}ms` }}
+            />
+            <span className={on ? "text-[12px] font-semibold text-zinc-50" : "text-[12px] text-zinc-500"}>{fmtDow(d).slice(0, 2)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

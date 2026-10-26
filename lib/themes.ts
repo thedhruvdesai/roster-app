@@ -3,7 +3,7 @@
  * opacity modifiers keep working), the accent, and the metallic gradient used on
  * primary buttons and money figures. Employer colours never change between themes.
  */
-export type ThemeId = "signal" | "onyx" | "midnight" | "rose" | "platinum" | "aurora";
+export type ThemeId = "base" | "signal" | "onyx" | "midnight" | "rose" | "platinum" | "aurora";
 
 type Ramp = [string, string, string, string, string, string, string, string, string, string, string, string];
 // order: 50 100 200 300 400 500 600 700 800 900 925 950
@@ -22,6 +22,18 @@ export interface Theme {
 }
 
 export const THEMES: Theme[] = [
+  {
+    id: "base",
+    name: "Base",
+    blurb: "Uber-style black and white",
+    ramp: ["#FFFFFF", "#F6F6F6", "#E2E2E2", "#CBCBCB", "#AFAFAF", "#757575", "#545454", "#333333", "#282828", "#141414", "#0A0A0A", "#000000"],
+    accent: "#FFFFFF",
+    accentSoft: "#E2E2E2",
+    ink: "#000000",
+    metal: ["#FFFFFF", "#FFFFFF", "#F0F0F0"],
+    glow: ["#FFFFFF", "#E8E8E8", "#9A9A9A"],
+    glowInk: "#000000",
+  },
   {
     id: "signal",
     name: "Signal",
@@ -119,7 +131,7 @@ export function themeCss() {
       `--glow-3:${t.glow[2]}`,
       `--glow-ink:${t.glowInk}`,
     ].join(";");
-    return `${t.id === "signal" ? ":root," : ""}[data-theme="${t.id}"]{${vars}}`;
+    return `${t.id === "base" ? ":root," : ""}[data-theme="${t.id}"]{${vars}}`;
   }).join("\n");
 }
 

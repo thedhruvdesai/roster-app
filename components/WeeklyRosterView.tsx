@@ -9,6 +9,7 @@ import { useRoster } from "@/lib/store";
 import type { Employer, ISODate, RestWarning, Shift } from "@/lib/types";
 import { BADGE, cn } from "@/lib/ui";
 import { ShiftCard } from "./ShiftCard";
+import { ShiftList } from "./ShiftList";
 import { Button, EmptyState, WeekNavigator } from "./ui";
 
 interface Props {
@@ -55,6 +56,19 @@ function useNow() {
 export function WeeklyRosterView({ onAdd, onEdit }: Props) {
   const { shifts, employers, weekStart, setWeek } = useRoster();
   const touch = useRef<{ x: number; y: number } | null>(null);
+  const [view, setView] = useState<"list" | "timeline">(() => {
+    try {
+      return (localStorage.getItem("shiftdesk-view") as "list" | "timeline") || "list";
+    } catch {
+      return "list";
+    }
+  });
+  const pickView = (v: "list" | "timeline") => {
+    setView(v);
+    try {
+      localStorage.setItem("shiftdesk-view", v);
+    } catch {}
+  };
   const days = weekDays(weekStart);
   const today = todayISO();
   const now = useNow();
@@ -122,6 +136,24 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
         </Button>
       </div>
 
+      {/* Uber-style segmented switch between the receipt list and the 24h timeline */}
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-[24px] font-bold tracking-tight text-zinc-50">Shifts</h2>
+        <div className="flex rounded-full bg-zinc-900 p-1" role="tablist" aria-label="Shift view">
+          {(["list", "timeline"] as const).map((v) => (
+            <button
+              key={v}
+              role="tab"
+              aria-selected={view === v}
+              onClick={() => pickView(v)}
+              className={cn("h-9 rounded-full px-4 text-[14px] font-semibold capitalize transition-colors", view === v ? "bg-zinc-50 text-zinc-950" : "text-zinc-400")}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <WeekGlance rows={data.rows} today={today} empById={data.empById} />
 
       {data.weekCount === 0 && (
@@ -137,6 +169,10 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
         />
       )}
 
+      {view === "list" ? (
+        <ShiftList rows={data.rows} empById={data.empById} restByShift={data.restByShift} onAdd={onAdd} onEdit={onEdit} />
+      ) : (
+        <>
       <div className="overflow-hidden rounded-2xl bg-zinc-900">
         {/* Hour ruler, aligned with the strips below */}
         <div className="grid grid-cols-[1fr] gap-x-3 border-b border-zinc-800 px-3 py-2 md:grid-cols-[5.5rem_1fr_7.5rem] md:px-4">
@@ -234,7 +270,9 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
         </ol>
       </div>
 
-      <Legend />
+          <Legend />
+        </>
+      )}
     </section>
   );
 }

@@ -23,10 +23,10 @@ The app is a static export (`output: "export"`), so `npm run build` writes a pla
 
 ```
 app/
-  layout.tsx               Figtree (self-hosted), Signal and gem themes, metadata
+  layout.tsx               SF Pro on Apple / Inter elsewhere, Base + other themes, metadata
   page.tsx                 renders <AppShell/>
 components/
-  AppShell.tsx             top bar with pill nav, floating capsule nav on phones, shift modal host
+  AppShell.tsx             top bar with pill nav, Uber-style tab bar on phones, shift modal host
   SummaryMetricsBar.tsx    38h meter, rest-gap alerts, long-shift flag, projected pay
   WeeklyRosterView.tsx     Mon–Sun grid, per-day totals, add/edit/duplicate/delete
   ShiftCard.tsx            badge, venue, times, overnight +1, net hrs, $, rest warning
@@ -35,7 +35,9 @@ components/
   EmployersView.tsx        companies, sites, rate overrides, badge colours, backup
   FixedRosterPanel.tsx     fixed weekly shifts that auto-fill the roster
   ShiftDial.tsx            24-hour clock of the next day of shifts
-  WeekCharts.tsx           weekly hours gauge and earnings-by-day line chart
+  WeekCharts.tsx           hours gauge, earnings line and Uber-style earnings bars
+  CityMap.tsx              React Three Fiber night city with a route to the next site (lazy-loaded)
+  ShiftList.tsx            trip-history style shift rows grouped by day
   DialGlow.tsx             React Three Fiber particle glow behind the dial (lazy-loaded)
   MenuSheet.tsx            hamburger menu: navigation, new shift, backup, install
   ui.tsx                   Button, badges, status pills, week navigator, form fields

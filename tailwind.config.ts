@@ -40,10 +40,10 @@ const config: Config = {
         vest: { DEFAULT: "rgb(var(--accent) / <alpha-value>)", soft: "rgb(var(--accent-soft) / <alpha-value>)", ink: "rgb(var(--accent-ink) / <alpha-value>)" },
       },
       fontFamily: {
-        sans: ["Figtree", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-        display: ["Figtree", "-apple-system", "sans-serif"],
-        mono: ["Figtree", "ui-monospace", "monospace"],
-        serif: ["Figtree", "-apple-system", "sans-serif"], // big figures (see .font-serif in globals)
+        sans: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', '"SF Pro Text"', "Inter", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', '"SF Pro Text"', "Inter", "Segoe UI", "Roboto", "sans-serif"],
+        mono: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', '"SF Pro Text"', "Inter", "Segoe UI", "Roboto", "sans-serif"],
+        serif: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', '"SF Pro Text"', "Inter", "Segoe UI", "Roboto", "sans-serif"], // big figures (see .font-serif in globals)
       },
     },
   },
