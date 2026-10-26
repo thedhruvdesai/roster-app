@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Calculator, Moon, Trash2, X } from "lucide-react";
+import { AlertTriangle, Calculator, CalendarPlus, Moon, Trash2, X } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, fmtAU, fmtDow, isValidTime, todayISO } from "@/lib/dates";
 import {
@@ -14,6 +14,7 @@ import {
 import { resolveRate, useRoster } from "@/lib/store";
 import { deleteShiftWithUndo } from "@/lib/actions";
 import { toast } from "@/lib/toast";
+import { addShiftToCalendar, googleCalendarUrl } from "@/lib/reminders";
 import type { ISODate, PaymentStatus, Shift } from "@/lib/types";
 import { PAYMENT_STATUS_LABEL } from "@/lib/types";
 import { BADGE, cn } from "@/lib/ui";
@@ -42,7 +43,7 @@ const BREAK_PRESETS = [0, 15, 30, 45, 60];
 const STATUSES: PaymentStatus[] = ["scheduled", "worked", "paid"];
 
 export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
-  const { employers, shifts, recurring, addShift, updateShift } = useRoster();
+  const { employers, shifts, recurring, addShift, updateShift, reminders } = useRoster();
   const active = employers.filter((e) => !e.archived || e.id === shift?.employerId);
   const [rateTouched, setRateTouched] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -211,8 +212,15 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
       updateShift(shift.id, payload);
       toast("Shift updated");
     } else {
-      addShift(payload);
-      toast(`Added ${fmtDow(payload.date)} ${payload.start}–${payload.end}`);
+      const id = addShift(payload);
+      toast(`Added ${fmtDow(payload.date)} ${payload.start}–${payload.end}`, {
+        label: "Add to calendar",
+        run: () => {
+          const st = useRoster.getState();
+          const added = st.shifts.find((x) => x.id === id);
+          if (added) addShiftToCalendar(added, st.employers, st.reminders.lead);
+        },
+      });
     }
     onClose();
   };
@@ -440,6 +448,25 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
           </div>
         </div>
 
+        {shift && (
+          <div className="hairline-t flex items-center gap-2 px-4 pt-2">
+            <button
+              type="button"
+              onClick={() => addShiftToCalendar(shift, employers, reminders.lead)}
+              className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-800 text-[16px] font-semibold text-zinc-50 active:opacity-70"
+            >
+              <CalendarPlus size={18} /> Add to Calendar
+            </button>
+            <a
+              href={googleCalendarUrl(shift, employers.find((e) => e.id === shift.employerId))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-11 items-center rounded-xl px-3 text-[14px] font-medium text-zinc-400 active:bg-zinc-800"
+            >
+              Google
+            </a>
+          </div>
+        )}
         {shift && (
           <div className="hairline-t px-4 py-2">
             <button

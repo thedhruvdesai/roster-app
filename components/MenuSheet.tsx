@@ -3,7 +3,7 @@
 import { Bell, BellOff, Building2, CalendarDays, CalendarPlus, Check, Download, Plus, Smartphone, Volume2, Wallet, X } from "lucide-react";
 import { addDays, todayISO } from "@/lib/dates";
 import { calcShift } from "@/lib/pay";
-import { LEAD_OPTIONS, askPermission, buildIcs, downloadIcs, fmtLead, notificationsSupported, playChime, registerWorker, showNotification, unlockAudio } from "@/lib/reminders";
+import { LEAD_OPTIONS, askPermission, buildIcs, openIcs, fmtLead, notificationsSupported, playChime, registerWorker, showNotification, unlockAudio } from "@/lib/reminders";
 import { type ReactNode, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { type Tab, useRoster } from "@/lib/store";
@@ -109,7 +109,7 @@ function MenuSheet({ onClose, onNewShift }: { onClose: () => void; onNewShift: (
       .shifts.filter((s) => s.status === "scheduled" && s.date >= from && s.date <= to && calcShift(s).startAt.getTime() > now)
       .sort((a, b) => calcShift(a).startAt.getTime() - calcShift(b).startAt.getTime());
     if (!list.length) return toast("No upcoming shifts in the next 4 weeks");
-    downloadIcs(buildIcs(list, employers, reminders.lead));
+    openIcs(buildIcs(list, employers, reminders.lead), "shiftdesk-shifts");
     toast(`${list.length} shifts saved for your calendar, alarm ${fmtLead(reminders.lead)} before`);
   };
 

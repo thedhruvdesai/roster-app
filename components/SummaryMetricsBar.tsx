@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2, Clock3 } from "lucide-react";
+import { AlertTriangle, CalendarPlus, CheckCircle2, Clock3 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { addDays, fmtDow, todayISO } from "@/lib/dates";
 import {
@@ -15,6 +15,7 @@ import {
   shiftsInRange,
 } from "@/lib/pay";
 import { useRoster } from "@/lib/store";
+import { addShiftToCalendar } from "@/lib/reminders";
 import { BADGE, BADGE_HEX, cn } from "@/lib/ui";
 import { EarningsBars } from "./WeekCharts";
 import dynamic from "next/dynamic";
@@ -151,12 +152,22 @@ export function SummaryMetricsBar({ onAdd, onEdit, onNav }: { onAdd: () => void;
                   </span>
                 </li>
               </ul>
-              <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="mt-4 grid grid-cols-[1fr_1fr_auto] gap-2">
                 <button onClick={() => onEdit(focus)} className="bg-vest h-12 rounded-xl text-[15px] font-semibold text-vest-ink active:opacity-70">
                   Open shift
                 </button>
                 <button onClick={() => onAdd()} className="h-12 rounded-xl bg-zinc-800 text-[15px] font-semibold text-zinc-50 active:opacity-70">
                   Add shift
+                </button>
+                <button
+                  onClick={() => {
+                    const st = useRoster.getState();
+                    addShiftToCalendar(focus, st.employers, st.reminders.lead);
+                  }}
+                  aria-label="Add this shift to my calendar"
+                  className="flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-800 text-zinc-50 active:opacity-70"
+                >
+                  <CalendarPlus size={20} />
                 </button>
               </div>
             </>

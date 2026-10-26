@@ -138,14 +138,66 @@ export function buildIcs(shifts: Shift[], employers: Employer[], lead: number) {
   return lines.join("\r\n");
 }
 
-export function downloadIcs(text: string) {
+export function downloadIcs(text: string, name = "shiftdesk-shifts.ics") {
   const blob = new Blob([text], { type: "text/calendar;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "shiftdesk-shifts.ics";
+  a.download = name;
   document.body.appendChild(a);
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
+// ── One shift → calendar ───────────────────────────────────────────────
+const isIOS = () =>
+  typeof navigator !== "undefined" &&
+  (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+const isAndroid = () => typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+
+/** A link to /cal.ics that returns this calendar text as a real file (see netlify/functions/ics.mjs) */
+export function icsLink(ics: string, name: string) {
+  const bytes = new TextEncoder().encode(ics);
+  let bin = "";
+  bytes.forEach((b) => (bin += String.fromCharCode(b)));
+  const d = btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return `/cal.ics?n=${encodeURIComponent(name)}&d=${d}`;
+}
+
+/** Google Calendar's "new event" page, filled in. Opens the Calendar app on Android. */
+export function googleCalendarUrl(s: Shift, emp?: Employer) {
+  const d = describeShift(s, emp);
+  const q = new URLSearchParams({
+    action: "TEMPLATE",
+    text: `${emp?.name ?? "Shift"} – ${s.site}`,
+    dates: `${icsDate(d.startAt)}/${icsDate(d.endAt)}`,
+    details: d.body + (s.notes ? `\n${s.notes}` : ""),
+    location: s.site,
+  });
+  return `https://calendar.google.com/calendar/render?${q.toString()}`;
+}
+
+/**
+ * Adds one shift to the phone's calendar in the way each phone handles best:
+ * iPhone opens the "Add to Calendar" sheet, Android opens Google Calendar,
+ * computers download an .ics file that opens in Outlook / Calendar.
+ */
+export function addShiftToCalendar(s: Shift, employers: Employer[], lead: number) {
+  const emp = employers.find((e) => e.id === s.employerId);
+  if (isAndroid()) {
+    window.open(googleCalendarUrl(s, emp), "_blank", "noopener");
+    return "google" as const;
+  }
+  return openIcs(buildIcs([s], employers, lead), `shift-${s.date}-${s.start.replace(":", "")}`);
+}
+
+/** iPhone: open the served file so the "Add to Calendar" sheet appears. Elsewhere: download it. */
+export function openIcs(ics: string, name: string) {
+  if (isIOS()) {
+    window.location.href = icsLink(ics, name);
+    return "ios" as const;
+  }
+  downloadIcs(ics, `${name}.ics`);
+  return "file" as const;
 }
