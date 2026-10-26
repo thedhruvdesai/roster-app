@@ -50,6 +50,11 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
   }, [from, to, rangeValid, ensureRecurring]);
 
   const summary = useMemo(() => buildPaySummary(shifts, employers, from, to), [shifts, employers, from, to]);
+  // Employers with nothing in this period still get a row, so every company is visible
+  const idle = useMemo(
+    () => employers.filter((e) => !e.archived && !summary.byEmployer.some((l) => l.employer.id === e.id)),
+    [employers, summary]
+  );
   const ledger = useMemo(
     () =>
       shiftsInRange(shifts, from, to).filter(
@@ -180,6 +185,17 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                   </li>
                 );
               })}
+              {idle.map((e) => (
+                <li key={e.id} className="flex items-start justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <EmployerBadge employer={e} />
+                    <p className="mt-1 text-sm text-zinc-500">
+                      No shifts · ${e.defaultRate.toFixed(2)}/h · <span className="capitalize">{e.payCycle}</span>
+                    </p>
+                  </div>
+                  <p className="shrink-0 font-display text-xl font-semibold text-zinc-600">{fmtMoney(0)}</p>
+                </li>
+              ))}
               <li className="flex justify-between px-4 py-3 font-display text-lg font-semibold">
                 <span className="text-zinc-300">Total {fmtHours(summary.totalHours)}</span>
                 <span className="text-vest">{fmtMoney(summary.grossProjected)}</span>
@@ -224,6 +240,19 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                       </tr>
                     );
                   })}
+                  {idle.map((e) => (
+                    <tr key={e.id} className="text-zinc-500">
+                      <td className="px-4 py-3">
+                        <EmployerBadge employer={e} />
+                        <p className="mt-0.5 text-xs capitalize text-zinc-500">{e.payCycle} pay</p>
+                      </td>
+                      <td className="px-3 py-3 text-right tabular-nums">0</td>
+                      <td className="px-3 py-3 text-right tabular-nums">0h</td>
+                      <td className="px-3 py-3 text-right tabular-nums">${e.defaultRate.toFixed(2)}</td>
+                      <td className="px-3 py-3 text-right font-display text-lg font-semibold text-zinc-600">{fmtMoney(0)}</td>
+                      <td colSpan={2} className="px-3 py-3 text-xs">No shifts this period</td>
+                    </tr>
+                  ))}
                 </tbody>
                 <tfoot className="border-t border-zinc-700 text-sm">
                   <tr>
