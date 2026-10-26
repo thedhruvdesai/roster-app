@@ -66,47 +66,65 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
 
   return (
     <div className="space-y-5">
-      {/* ── Period selector ───────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-[9px] bg-zinc-800 p-0.5">
-            {(["week", "fortnight", "custom"] as Mode[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={cn(
-                  "rounded-[7px] px-4 py-1.5 text-[13px] font-semibold capitalize transition-colors",
-                  mode === m ? "bg-zinc-600 text-zinc-50 shadow" : "text-zinc-300"
-                )}
-              >
-                {m === "custom" ? "Date range" : m}
-              </button>
-            ))}
-          </div>
-          {mode === "custom" ? (
-            <div className="flex items-center gap-2">
-              <input type="date" className={cn(inputCls, "h-9 w-auto")} value={custom.from} onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))} />
-              <span className="text-zinc-600">→</span>
-              <input type="date" className={cn(inputCls, "h-9 w-auto")} value={custom.to} onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))} />
-            </div>
-          ) : (
-            <WeekNavigator weekStart={weekStart} onChange={setWeek} />
-          )}
+      {/* ── Period: Uber-style segmented pill, then the week stepper ── */}
+      <div className="space-y-3">
+        <div className="flex rounded-full bg-zinc-900 p-1 sm:inline-flex">
+          {(["week", "fortnight", "custom"] as Mode[]).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={cn(
+                "h-10 flex-1 rounded-full px-5 text-[15px] font-semibold capitalize transition-colors sm:flex-none",
+                mode === m ? "bg-zinc-50 text-zinc-950" : "text-zinc-400"
+              )}
+            >
+              {m === "custom" ? "Range" : m}
+            </button>
+          ))}
         </div>
-        <p className="text-xs text-zinc-500">
-          Pay period <span className="font-medium text-zinc-300">{rangeValid ? fmtRange(from, to) : "invalid range"}</span>
+        {mode === "custom" ? (
+          <div className="grid grid-cols-2 gap-2 sm:flex">
+            <input type="date" aria-label="From" className={cn(inputCls, "sm:w-auto")} value={custom.from} onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))} />
+            <input type="date" aria-label="To" className={cn(inputCls, "sm:w-auto")} value={custom.to} onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))} />
+          </div>
+        ) : (
+          <WeekNavigator weekStart={weekStart} onChange={setWeek} />
+        )}
+      </div>
+
+      {/* ── Earnings hero: one big figure, the status split underneath ── */}
+      <div className="rounded-[24px] bg-zinc-900 p-5 sm:p-6">
+        <p className="text-[14px] text-zinc-400">
+          {mode === "week" ? "This week" : mode === "fortnight" ? "This fortnight" : rangeValid ? fmtRange(from, to) : "Invalid range"}, before tax
         </p>
+        <p className="type-board mt-1 text-[clamp(2.75rem,14vw,4.5rem)] text-zinc-50">{fmtMoney(summary.grossProjected)}</p>
+        <p className="mt-1 text-[14px] text-zinc-400">
+          {fmtHours(summary.totalHours)} across {summary.shiftCount} shift{summary.shiftCount === 1 ? "" : "s"}
+        </p>
+        {!empty && (
+          <div className="mt-5">
+            <StatusBar paid={summary.paid} pending={summary.pendingPay} scheduled={summary.scheduled} />
+          </div>
+        )}
       </div>
 
-      {/* ── KPIs ──────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-zinc-800 bg-zinc-800 lg:grid-cols-4">
-        <Kpi icon={<Wallet size={14} />} label="Gross projected" value={fmtMoney(summary.grossProjected)} sub={`${fmtHours(summary.totalHours)} across ${summary.shiftCount} shifts`} />
-        <Kpi icon={<CheckCheck size={14} />} label="Verified / completed" value={fmtMoney(summary.verified)} sub="Worked + paid shifts" tone="emerald" />
-        <Kpi icon={<Hourglass size={14} />} label="Worked, awaiting pay" value={fmtMoney(summary.pendingPay)} sub="Chase if overdue" tone="amber" />
-        <Kpi icon={<Banknote size={14} />} label="Paid" value={fmtMoney(summary.paid)} sub={`${fmtMoney(summary.scheduled)} still scheduled`} />
+      {/* ── Three status tiles, colour only as a small marker ── */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        {[
+          { label: "Worked", value: summary.verified, dot: "bg-zinc-50", sub: "done so far" },
+          { label: "Pending", value: summary.pendingPay, dot: "bg-amber-400", sub: "chase if late" },
+          { label: "Paid", value: summary.paid, dot: "bg-emerald-400", sub: "in the bank" },
+        ].map((t) => (
+          <div key={t.label} className="rounded-[20px] bg-zinc-900 p-4">
+            <p className="flex items-center gap-1.5 text-[12px] text-zinc-400">
+              <span className={cn("h-2 w-2 rounded-full", t.dot)} />
+              {t.label}
+            </p>
+            <p className="mt-1.5 truncate text-[clamp(1.05rem,5vw,1.6rem)] font-bold tracking-tight text-zinc-50">{fmtMoney(t.value)}</p>
+            <p className="mt-0.5 text-[12px] text-zinc-500">{t.sub}</p>
+          </div>
+        ))}
       </div>
-
-      {!empty && <StatusBar paid={summary.paid} pending={summary.pendingPay} scheduled={summary.scheduled} />}
 
       {overdue.length > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] px-4 py-3">
