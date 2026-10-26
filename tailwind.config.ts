@@ -36,7 +36,7 @@ const config: Config = {
         cyan: sys("#64D2FF", "#8ADDFF"), // systemCyan
         amber: sys("#FF9F0A", "#FFB340"), // pending = systemOrange
         indigo: sys("#5E5CE6", "#7D7AFF"), // systemIndigo
-        vest: { DEFAULT: "#FFD60A", soft: "#FFE34D", ink: "#000000" }, // systemYellow tint
+        vest: { DEFAULT: "#7D7AFF", soft: "#9C9AFF", ink: "#FFFFFF" }, // app tint: indigo (systemIndigo, dark-accessible), matches the mark
       },
       fontFamily: {
         sans: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "Inter", "system-ui", "Segoe UI", "Roboto", "sans-serif"],

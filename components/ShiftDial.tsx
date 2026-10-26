@@ -47,7 +47,7 @@ interface Props {
 
 /**
  * The next 24 hours on a clock face. Each shift is an arc in its employer colour,
- * the yellow hand is now. Arcs draw in once when the page loads.
+ * the indigo hand is now. Arcs draw in once when the page loads.
  */
 export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Props) {
   const arcs = useMemo(() => {
@@ -133,8 +133,8 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
           />
         ))}
         {/* now hand */}
-        <line x1={hx} y1={hy} x2={hx2} y2={hy2} stroke="#FFD60A" strokeWidth={3} strokeLinecap="round" />
-        <circle cx={hx} cy={hy} r={3.5} fill="#FFD60A" />
+        <line x1={hx} y1={hy} x2={hx2} y2={hy2} stroke="#7D7AFF" strokeWidth={3} strokeLinecap="round" />
+        <circle cx={hx} cy={hy} r={3.5} fill="#7D7AFF" />
       </svg>
       <figcaption className="absolute inset-0 flex flex-col items-center justify-center text-center">
         <span className="text-[28px] font-bold leading-none tracking-tight text-zinc-50">{centre}</span>
