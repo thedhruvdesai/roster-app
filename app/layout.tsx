@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{var t=JSON.parse(localStorage.getItem('shiftdesk-roster-v2')||'{}').state;if(t&&t.theme)document.documentElement.dataset.theme=t.theme}catch(e){}",
+              "try{var t=JSON.parse(localStorage.getItem('shiftdesk-roster-v2')||'{}').state;if(t&&['base','signal','platinum'].indexOf(t.theme)>-1)document.documentElement.dataset.theme=t.theme}catch(e){}",
           }}
         />
         <script

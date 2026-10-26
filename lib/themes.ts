@@ -3,7 +3,7 @@
  * opacity modifiers keep working), the accent, and the metallic gradient used on
  * primary buttons and money figures. Employer colours never change between themes.
  */
-export type ThemeId = "base" | "signal" | "onyx" | "midnight" | "rose" | "platinum" | "aurora";
+export type ThemeId = "base" | "signal" | "platinum";
 
 type Ramp = [string, string, string, string, string, string, string, string, string, string, string, string];
 // order: 50 100 200 300 400 500 600 700 800 900 925 950
@@ -47,42 +47,6 @@ export const THEMES: Theme[] = [
     glowInk: "#03140A",
   },
   {
-    id: "onyx",
-    name: "Onyx",
-    blurb: "Black and champagne gold",
-    ramp: ["#FFFFFF", "#F2F2F7", "#E5E5EA", "#C7C7CC", "#98989F", "#6C6C70", "#48484A", "#2E2E31", "#1E1E20", "#111112", "#080808", "#000000"],
-    accent: "#E9C46A",
-    accentSoft: "#F2D58E",
-    ink: "#000000",
-    metal: ["#F6E1A6", "#E9C46A", "#C9A04B"],
-    glow: ["#FBE7B0", "#E2B95A", "#5A4316"],
-    glowInk: "#140E00",
-  },
-  {
-    id: "midnight",
-    name: "Midnight",
-    blurb: "Navy black and ice blue",
-    ramp: ["#FFFFFF", "#EEF2F7", "#DDE3EC", "#BFC7D6", "#8E99B0", "#5F6B84", "#3A4760", "#1F2A40", "#131C2E", "#0B1220", "#060A14", "#03060D"],
-    accent: "#A7C7FF",
-    accentSoft: "#C6DAFF",
-    ink: "#03060D",
-    metal: ["#E2ECFF", "#A7C7FF", "#6F93D9"],
-    glow: ["#DCE9FF", "#7FA6EE", "#1C2F58"],
-    glowInk: "#030A1A",
-  },
-  {
-    id: "rose",
-    name: "Rose Noir",
-    blurb: "Warm black and rose gold",
-    ramp: ["#FFFFFF", "#F5F0F2", "#E9E1E4", "#CFC4C8", "#A2959A", "#76696E", "#4F4448", "#33292D", "#211A1D", "#141012", "#0A0708", "#050304"],
-    accent: "#E8A896",
-    accentSoft: "#F2C3B5",
-    ink: "#1A0D09",
-    metal: ["#F8D6CB", "#E8A896", "#C07A66"],
-    glow: ["#FFDCD1", "#E39A86", "#5C2E24"],
-    glowInk: "#1A0905",
-  },
-  {
     id: "platinum",
     name: "Platinum",
     blurb: "Pure black and brushed silver",
@@ -93,20 +57,7 @@ export const THEMES: Theme[] = [
     metal: ["#FFFFFF", "#D9DCE1", "#9EA3AB"],
     glow: ["#FFFFFF", "#C9CDD3", "#3D4046"],
     glowInk: "#060607",
-  },
-  {
-    id: "aurora",
-    name: "Aurora",
-    blurb: "Deep space with a cyan-to-violet glow",
-    ramp: ["#FFFFFF", "#F1F0FA", "#E2E0F2", "#C6C3DD", "#9894B4", "#6B6788", "#47445E", "#2A2840", "#1A182C", "#0F0D1C", "#08070F", "#030209"],
-    accent: "#9FD8FF",
-    accentSoft: "#C5E8FF",
-    ink: "#030209",
-    metal: ["#8AF3FF", "#A9B6FF", "#B98CFF"],
-    glow: ["#9BF6FF", "#9C8CFF", "#2B1E63"],
-    glowInk: "#050312",
-  },
-];
+  },];
 
 const rgb = (hex: string) => {
   const n = parseInt(hex.slice(1), 16);
