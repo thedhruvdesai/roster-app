@@ -1,6 +1,9 @@
 "use client";
 
-import { Building2, CalendarDays, Check, Download, Plus, Smartphone, Wallet, X } from "lucide-react";
+import { Bell, BellOff, Building2, CalendarDays, CalendarPlus, Check, Download, Plus, Smartphone, Volume2, Wallet, X } from "lucide-react";
+import { addDays, todayISO } from "@/lib/dates";
+import { calcShift } from "@/lib/pay";
+import { LEAD_OPTIONS, askPermission, buildIcs, downloadIcs, fmtLead, notificationsSupported, playChime, registerWorker, showNotification, unlockAudio } from "@/lib/reminders";
 import { type ReactNode, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { type Tab, useRoster } from "@/lib/store";
@@ -39,7 +42,9 @@ export function MenuButton({ onNewShift, className }: { onNewShift: () => void; 
 }
 
 function MenuSheet({ onClose, onNewShift }: { onClose: () => void; onNewShift: () => void }) {
-  const { tab, setTab, employers, shifts, recurring, theme, setTheme } = useRoster();
+  const { tab, setTab, employers, shifts, recurring, theme, setTheme, reminders, setReminders, ensureRecurring } = useRoster();
+  const [perm, setPerm] = useState<string>("default");
+  useEffect(() => setPerm(notificationsSupported() ? Notification.permission : "unsupported"), []);
   const [install, setInstall] = useState<InstallEvent | null>(null);
   const [standalone, setStandalone] = useState(false);
 
@@ -73,6 +78,41 @@ function MenuSheet({ onClose, onNewShift }: { onClose: () => void; onNewShift: (
     toast("Backup downloaded");
   };
 
+  const toggleReminders = async () => {
+    unlockAudio();
+    if (reminders.enabled) {
+      setReminders({ enabled: false });
+      toast("Shift reminders off");
+      return;
+    }
+    await registerWorker();
+    const p = await askPermission();
+    setPerm(p);
+    setReminders({ enabled: true });
+    toast(p === "granted" ? `Reminders on: ${fmtLead(reminders.lead)} before each shift` : "Reminders on inside the app. Allow notifications to get alerts outside it.");
+  };
+
+  const testReminder = async () => {
+    unlockAudio();
+    if (reminders.sound) playChime();
+    const shown = await showNotification("Shift in 1 h: Test", "This is how your shift reminder will look and sound", "test");
+    toast(shown ? "Test reminder sent" : "Test reminder (notifications are off for this browser)");
+  };
+
+  const exportCalendar = () => {
+    const from = todayISO();
+    const to = addDays(from, 28);
+    ensureRecurring(from, to);
+    const now = Date.now();
+    const list = useRoster
+      .getState()
+      .shifts.filter((s) => s.status === "scheduled" && s.date >= from && s.date <= to && calcShift(s).startAt.getTime() > now)
+      .sort((a, b) => calcShift(a).startAt.getTime() - calcShift(b).startAt.getTime());
+    if (!list.length) return toast("No upcoming shifts in the next 4 weeks");
+    downloadIcs(buildIcs(list, employers, reminders.lead));
+    toast(`${list.length} shifts saved for your calendar, alarm ${fmtLead(reminders.lead)} before`);
+  };
+
   const doInstall = async () => {
     if (!install) return;
     await install.prompt();
@@ -83,7 +123,7 @@ function MenuSheet({ onClose, onNewShift }: { onClose: () => void; onNewShift: (
   return (
     <div className="fixed inset-0 z-[70]" role="dialog" aria-modal="true" aria-label="Menu">
       <div className="backdrop-in absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <aside className="menu-in pb-safe absolute inset-y-0 right-0 flex w-[min(340px,88vw)] flex-col bg-zinc-900 pt-[env(safe-area-inset-top)] shadow-2xl">
+      <aside className="menu-in pb-safe absolute inset-y-0 right-0 flex w-[min(340px,88vw)] flex-col overflow-y-auto overscroll-contain bg-zinc-900 pt-[env(safe-area-inset-top)] shadow-2xl">
         <div className="flex items-center justify-between px-5 py-4">
           <Logo size={30} />
           <button onClick={onClose} aria-label="Close menu" className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-800 text-zinc-300 active:opacity-60">
@@ -133,7 +173,69 @@ function MenuSheet({ onClose, onNewShift }: { onClose: () => void; onNewShift: (
 
         <div className="mx-5 my-4 h-px bg-zinc-700/60" />
 
+        <section className="px-5" aria-label="Shift reminders">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[15px] font-semibold text-zinc-50">Shift reminders</p>
+              <p className="text-[13px] leading-snug text-zinc-500">
+                {reminders.enabled
+                  ? perm === "granted"
+                    ? "Sound and notification before each shift"
+                    : perm === "denied"
+                      ? "Notifications blocked: sound and banner in the app only"
+                      : "Sound and banner while ShiftDesk is open"
+                  : "Off"}
+              </p>
+            </div>
+            <button
+              role="switch"
+              aria-checked={reminders.enabled}
+              aria-label="Shift reminders"
+              onClick={toggleReminders}
+              className={cn("relative h-[31px] w-[51px] shrink-0 rounded-full transition-colors", reminders.enabled ? "bg-[#30D158]" : "bg-zinc-700")}
+            >
+              <span className={cn("absolute left-0 top-0.5 h-[27px] w-[27px] rounded-full bg-white shadow transition-transform", reminders.enabled ? "translate-x-[22px]" : "translate-x-0.5")} />
+            </button>
+          </div>
+
+          <p className="mb-2 mt-3 text-[13px] font-semibold text-zinc-400">Remind me</p>
+          <div className="grid grid-cols-4 gap-1.5 rounded-full bg-zinc-800 p-1">
+            {LEAD_OPTIONS.map((m) => (
+              <button
+                key={m}
+                onClick={() => setReminders({ lead: m })}
+                aria-pressed={reminders.lead === m}
+                className={cn("h-8 rounded-full text-[13px] font-semibold", reminders.lead === m ? "bg-zinc-50 text-zinc-950" : "text-zinc-400")}
+              >
+                {fmtLead(m)}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-[12px] text-zinc-500">before the shift starts</p>
+
+          <div className="mt-3 flex gap-2">
+            <button
+              onClick={() => setReminders({ sound: !reminders.sound })}
+              aria-pressed={reminders.sound}
+              className={cn("flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold", reminders.sound ? "bg-zinc-50 text-zinc-950" : "bg-zinc-800 text-zinc-400")}
+            >
+              {reminders.sound ? <Volume2 size={15} /> : <BellOff size={15} />} Sound {reminders.sound ? "on" : "off"}
+            </button>
+            <button onClick={testReminder} className="flex h-9 items-center gap-1.5 rounded-full bg-zinc-800 px-3.5 text-[13px] font-semibold text-zinc-50 active:opacity-60">
+              <Bell size={15} /> Test
+            </button>
+          </div>
+        </section>
+
+        <div className="mx-5 my-4 h-px bg-zinc-700/60" />
+
         <div className="space-y-1 px-3">
+          <MenuAction
+            icon={<CalendarPlus size={20} />}
+            label="Add shifts to phone calendar"
+            hint={`Next 4 weeks, alarm ${fmtLead(reminders.lead)} before. Rings even when ShiftDesk is closed`}
+            onClick={exportCalendar}
+          />
           <MenuAction icon={<Plus size={20} />} label="New shift" onClick={() => { onClose(); onNewShift(); }} />
           <MenuAction icon={<Download size={20} />} label="Download backup" hint="Saves your shifts and employers as a file" onClick={backup} />
           {!standalone && (

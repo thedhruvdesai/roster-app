@@ -7,6 +7,7 @@ import { DEFAULT_EMPLOYERS, DEFAULT_RECURRING, SAI_EMPLOYER } from "./mock";
 import { calcShift } from "./pay";
 import type { Employer, ISODate, PaymentStatus, RecurringShift, Shift, WeekNote } from "./types";
 import type { ThemeId } from "./themes";
+import { DEFAULT_REMINDERS, type ReminderSettings } from "./reminders";
 
 export type Tab = "roster" | "pay" | "employers";
 
@@ -27,6 +28,8 @@ interface RosterState {
   tab: Tab;
   theme: ThemeId;
   setTheme: (t: ThemeId) => void;
+  reminders: ReminderSettings;
+  setReminders: (patch: Partial<ReminderSettings>) => void;
   weekStart: ISODate;
 
   setTab: (t: Tab) => void;
@@ -71,6 +74,8 @@ export const useRoster = create<RosterState>()(
       tab: "roster",
       theme: "base",
       setTheme: (theme) => set({ theme }),
+      reminders: DEFAULT_REMINDERS,
+      setReminders: (patch) => set((s) => ({ reminders: { ...s.reminders, ...patch } })),
       weekStart: startOfWeek(todayISO()),
 
       setTab: (tab) => set({ tab }),
@@ -239,6 +244,7 @@ export const useRoster = create<RosterState>()(
         weekNotes: s.weekNotes,
         tab: s.tab,
         theme: s.theme,
+        reminders: s.reminders,
       }),
       merge: (persisted, current) => ({ ...current, ...(persisted as object), weekStart: startOfWeek(todayISO()) }),
     }
