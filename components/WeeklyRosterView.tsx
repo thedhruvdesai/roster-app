@@ -176,7 +176,7 @@ export function WeeklyRosterView({ onAdd, onEdit }: Props) {
                 <div className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-2 md:grid-cols-[5.5rem_1fr_7.5rem]">
                   {/* Day label */}
                   <div className="flex items-baseline gap-2 md:block">
-                    <p className={cn("font-display text-2xl font-semibold leading-none", isToday ? "text-vest" : isPast ? "text-zinc-500" : "text-zinc-100")}>
+                    <p className={cn("font-serif text-[32px] font-bold leading-none", isToday ? "text-vest" : isPast ? "text-zinc-500" : "text-zinc-100")}>
                       {fmtDow(r.date)} {fmtDayNum(r.date)}
                     </p>
                     {isToday && <p className="text-xs font-medium text-vest md:mt-1">Today</p>}

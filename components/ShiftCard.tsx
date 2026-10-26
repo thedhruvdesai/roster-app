@@ -40,7 +40,7 @@ export function ShiftCard({ shift, employer, restWarning, onEdit, onDuplicate, o
 
       <div className="pointer-events-none relative">
         <div className="flex items-start justify-between gap-2">
-          <p className="font-display text-2xl font-semibold leading-none text-zinc-50">
+          <p className="font-serif text-[34px] font-bold leading-none text-zinc-50">
             {shift.start}
             <span className="px-1 text-zinc-500">–</span>
             {shift.end}
@@ -51,7 +51,7 @@ export function ShiftCard({ shift, employer, restWarning, onEdit, onDuplicate, o
             )}
           </p>
           <div className="text-right font-display leading-none">
-            <p className="text-xl font-semibold text-zinc-50">{fmtMoney(c.pay)}</p>
+            <p className="font-serif text-[28px] font-bold text-zinc-50">{fmtMoney(c.pay)}</p>
           </div>
         </div>
 

@@ -23,10 +23,10 @@ The app is a static export (`output: "export"`), so `npm run build` writes a pla
 
 ```
 app/
-  layout.tsx               SF Pro (Apple) / Inter fallback, Apple dark theme, metadata
+  layout.tsx               Geist + Big Shoulders Display (self-hosted), themes, metadata
   page.tsx                 renders <AppShell/>
 components/
-  AppShell.tsx             top tabs, hydration gate, shift modal host
+  AppShell.tsx             website top bar, phone tab bar, hydration gate, shift modal host
   SummaryMetricsBar.tsx    38h meter, rest-gap alerts, long-shift flag, projected pay
   WeeklyRosterView.tsx     Mon–Sun grid, per-day totals, add/edit/duplicate/delete
   ShiftCard.tsx            badge, venue, times, overnight +1, net hrs, $, rest warning

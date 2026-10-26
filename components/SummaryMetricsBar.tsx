@@ -18,6 +18,8 @@ import { useRoster } from "@/lib/store";
 import { BADGE, cn } from "@/lib/ui";
 import { ShiftDial } from "./ShiftDial";
 
+const FULL_DOW: Record<string, string> = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday" };
+
 function countdown(ms: number) {
   const mins = Math.max(0, Math.round(ms / 60_000));
   const d = Math.floor(mins / 1440);
@@ -75,107 +77,112 @@ export function SummaryMetricsBar() {
   const fc = focus ? calcShift(focus) : null;
   const progress = m.onNow && fc ? Math.min(100, ((now - fc.startAt.getTime()) / (fc.endAt.getTime() - fc.startAt.getTime())) * 100) : null;
 
+  const dayWord = focus ? (focus.date === todayISO() ? "today" : FULL_DOW[fmtDow(focus.date)] ?? fmtDow(focus.date)) : "";
+  const lead = m.onNow ? "On shift now" : focus ? `Next shift, ${dayWord}` : "No shifts booked";
+
   return (
-    <section aria-label="This week at a glance" className="space-y-5">
-      {/* The board: the one big thing on the page */}
-      <div className={cn("relative grid items-center gap-6 overflow-hidden rounded-[28px] bg-zinc-900 p-5 sm:p-7 md:grid-cols-[auto_1fr] md:gap-10", m.onNow && "ring-1 ring-inset ring-vest/50")}>
-        <ShiftDial
-          shifts={shifts}
-          employers={employers}
-          now={now}
-          focus={focus}
-          centre={focus && fc ? countdown((m.onNow ? fc.endAt.getTime() : m.nextAt) - now) : "Free"}
-          caption={m.onNow ? "left on shift" : focus ? "until next shift" : "next 24 hours"}
-        />
+    <section aria-label="This week at a glance">
+      {/* Hero: the one loud thing on the page. Time set in signage type, the dial beside it. */}
+      <div className="relative grid items-center gap-8 pb-10 pt-2 md:grid-cols-[1fr_auto] md:gap-12 md:pb-14 md:pt-6">
         <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-          <span className={cn("inline-flex items-center gap-2 text-[15px] font-semibold", m.onNow ? "text-vest" : "text-zinc-50")}>
+          <p className="reveal flex items-center gap-2 text-[15px] text-zinc-400" style={{ animationDelay: "0ms" }}>
             {m.onNow ? <span className="h-2 w-2 animate-pulse rounded-full bg-vest motion-reduce:animate-none" /> : <Clock3 size={15} />}
-            {m.onNow ? "On shift now" : "Next shift"}
-          </span>
-          {focus && (
-            <span className="text-[15px] text-zinc-400">
-              {fmtDow(focus.date)} {focus.date === todayISO() ? "today" : ""}
-            </span>
+            <span className={m.onNow ? "font-medium text-vest" : ""}>{lead}</span>
+            {focus && fc && (
+              <span className="text-zinc-500">
+                {m.onNow ? `${countdown(fc.endAt.getTime() - now)} left` : `in ${countdown(m.nextAt - now)}`}
+              </span>
+            )}
+          </p>
+
+          {focus && fc ? (
+            <>
+              <h2 className="type-board mt-4 text-[clamp(6.5rem,34vw,15rem)] text-zinc-50 md:flex md:flex-wrap md:gap-x-[0.12em] md:text-[clamp(7rem,11.5vw,14rem)]" aria-label={`${focus.start} to ${focus.end}`}>
+                <span className="mask"><span className="reveal block" style={{ animationDelay: "80ms" }}>{focus.start}</span></span>
+                <span className="mask"><span className="reveal block text-zinc-600" style={{ animationDelay: "160ms" }}>{focus.end}</span></span>
+              </h2>
+              <div className="reveal mt-6 grid items-baseline gap-x-8 gap-y-3 border-t border-zinc-700/70 pt-5 sm:grid-cols-[auto_auto_1fr]" style={{ animationDelay: "240ms" }}>
+                {focusEmp && (
+                  <span className="inline-flex items-center gap-2 text-[15px] font-medium text-zinc-50">
+                    <span className={cn("h-2.5 w-2.5 rounded-full", BADGE[focusEmp.color].dot)} />
+                    {focusEmp.name}
+                  </span>
+                )}
+                <span className="text-[15px] text-zinc-400">
+                  {focus.site}
+                  {fc.overnight ? ", into the next morning" : ""}
+                </span>
+                <span className="text-gold-grad font-serif text-[40px] font-bold leading-none sm:justify-self-end">{fmtMoney(fc.pay)}</span>
+              </div>
+              {progress !== null && (
+                <div className="mt-5 h-1 overflow-hidden rounded-full bg-zinc-800" aria-label={`${Math.round(progress)}% of shift done`}>
+                  <div className="h-full rounded-full bg-vest" style={{ width: `${progress}%` }} />
+                </div>
+              )}
+            </>
+          ) : (
+            <h2 className="type-board mt-4 text-[clamp(4.5rem,20vw,10rem)] text-zinc-600">Free week</h2>
           )}
         </div>
 
-        {focus && fc ? (
-          <>
-            <p className="type-board mt-3 text-[clamp(4.5rem,21vw,8.5rem)] text-zinc-50 md:text-[clamp(4.5rem,9vw,8.5rem)]">
-              <span className="block sm:inline">{focus.start}</span>
-              <span className="mx-[0.12em] hidden font-light text-zinc-600 sm:inline-block" aria-label="to">–</span>
-              <span className="block text-zinc-500 sm:inline sm:text-zinc-50">{focus.end}</span>
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-              {focusEmp && (
-                <span className="inline-flex items-center gap-2 text-[15px] font-semibold text-zinc-50">
-                  <span className={cn("h-3 w-3 rounded-sm", BADGE[focusEmp.color].bar)} />
-                  {focusEmp.name}
-                </span>
-              )}
-              <span className="text-[15px] text-zinc-300">{focus.site}</span>
-              {fc.overnight && <span className="text-[15px] text-zinc-400">into the next morning</span>}
-              <span className="text-gold-grad ml-auto font-serif text-[30px] leading-none">{fmtMoney(fc.pay)}</span>
-            </div>
-            {progress !== null && (
-              <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-zinc-700" aria-label={`${Math.round(progress)}% of shift done`}>
-                <div className="h-full rounded-full bg-vest" style={{ width: `${progress}%` }} />
-              </div>
-            )}
-          </>
-        ) : (
-          <p className="type-board mt-3 text-[clamp(2.25rem,9vw,4rem)] text-zinc-500">Nothing booked</p>
-        )}
+        <div className="reveal md:w-[320px]" style={{ animationDelay: "200ms" }}>
+          <ShiftDial
+            shifts={shifts}
+            employers={employers}
+            now={now}
+            focus={focus}
+            centre={focus && fc ? countdown((m.onNow ? fc.endAt.getTime() : m.nextAt) - now) : "Free"}
+            caption={m.onNow ? "left on shift" : focus ? "until next shift" : "next 24 hours"}
+          />
         </div>
       </div>
 
-      {/* Week ledger: ruled columns, no boxes */}
-      <dl className="grid grid-cols-2 gap-3 lg:grid-cols-[1.6fr_1fr_1fr_1fr]">
-        <div className="col-span-2 rounded-2xl bg-zinc-900 p-4 lg:col-span-1">
-          <dt className="flex items-baseline justify-between text-[13px] font-semibold text-zinc-400">
+      {/* The week as a ruled ledger: figures large, labels small, no boxes */}
+      <dl className="grid grid-cols-2 border-y border-zinc-700/70 lg:grid-cols-4">
+        <div className="col-span-2 border-b border-zinc-700/70 py-6 pr-6 lg:col-span-1 lg:border-b-0 lg:border-r">
+          <dt className="flex items-baseline justify-between text-[13px] text-zinc-400">
             <span>Hours this week</span>
             <span>{m.pay.shiftCount} shifts</span>
           </dt>
-          <dd className="mt-1 flex items-baseline gap-2">
-            <span className="font-serif text-[48px] leading-none text-zinc-50">{fmtHours(hours).replace("h", "")}</span>
-            <span className="text-zinc-500">of {WEEKLY_HOURS_LIMIT}h</span>
+          <dd className="mt-2 flex items-baseline gap-2">
+            <span className="font-serif text-[64px] font-bold leading-[0.85] text-zinc-50">{fmtHours(hours).replace("h", "")}</span>
+            <span className="text-zinc-500">of {WEEKLY_HOURS_LIMIT}</span>
           </dd>
-          <div className="relative mt-3 h-1.5 rounded-full bg-zinc-700">
+          <div className="relative mt-4 h-1 rounded-full bg-zinc-800">
             <div className={cn("h-full rounded-full", over ? "bg-rose-400" : near ? "bg-amber-300" : "bg-emerald-400")} style={{ width: `${pct}%` }} />
-            <span className="absolute -inset-y-1 w-0.5 rounded bg-zinc-300" style={{ left: `${limitPct}%` }} title={`${WEEKLY_HOURS_LIMIT}h`} />
+            <span className="absolute -inset-y-1 w-px bg-zinc-300" style={{ left: `${limitPct}%` }} title={`${WEEKLY_HOURS_LIMIT}h`} />
           </div>
-          <p className={cn("mt-2 text-sm", over ? "text-rose-300" : near ? "text-amber-200" : "text-zinc-400")}>
+          <p className={cn("mt-2 text-[13px]", over ? "text-rose-300" : near ? "text-amber-200" : "text-zinc-400")}>
             {over ? `${fmtHours(hours - WEEKLY_HOURS_LIMIT)} over a full-time week` : `${fmtHours(WEEKLY_HOURS_LIMIT - hours)} left before ${WEEKLY_HOURS_LIMIT}h`}
           </p>
         </div>
 
-        <div className="rounded-2xl bg-zinc-900 p-4">
-          <dt className="flex items-center gap-1.5 text-[13px] font-semibold text-zinc-400"><BedDouble size={15} /> Rest gaps</dt>
+        <div className="border-r border-zinc-700/70 py-6 pr-4 lg:px-6">
+          <dt className="flex items-center gap-1.5 text-[13px] text-zinc-400"><BedDouble size={14} /> Rest gaps</dt>
           {m.rest.length ? (
             <dd>
-              <p className="mt-1 flex items-center gap-2 font-serif text-[30px] leading-tight text-rose-300"><AlertTriangle size={20} /> {m.rest.length} short</p>
-              <p className="mt-1 text-sm text-rose-200/80">Tightest {minGap! < 0 ? "overlaps" : `is ${fmtHours(minGap!)}`}</p>
+              <p className="mt-2 flex items-center gap-2 font-serif text-[44px] font-bold leading-[0.9] text-rose-300"><AlertTriangle size={22} /> {m.rest.length} short</p>
+              <p className="mt-1 text-[13px] text-rose-200/80">Tightest {minGap! < 0 ? "overlaps" : `is ${fmtHours(minGap!)}`}</p>
             </dd>
           ) : (
             <dd>
-              <p className="mt-1 flex items-center gap-2 font-serif text-[30px] leading-tight text-emerald-300"><CheckCircle2 size={20} /> Clear</p>
-              <p className="mt-1 text-sm text-zinc-400">All gaps {MIN_REST_HOURS}h+</p>
+              <p className="mt-2 flex items-center gap-2 font-serif text-[44px] font-bold leading-[0.9] text-emerald-300"><CheckCircle2 size={22} /> Clear</p>
+              <p className="mt-1 text-[13px] text-zinc-400">All gaps {MIN_REST_HOURS}h or more</p>
             </dd>
           )}
-          {m.long > 0 && <p className="mt-1 text-sm text-amber-200">{m.long} over {LONG_SHIFT_HOURS}h</p>}
+          {m.long > 0 && <p className="mt-1 text-[13px] text-amber-200">{m.long} over {LONG_SHIFT_HOURS}h</p>}
         </div>
 
-        <div className="rounded-2xl bg-zinc-900 p-4">
-          <dt className="text-[13px] font-semibold text-zinc-400">Week&apos;s pay</dt>
-          <dd className="text-gold-grad mt-1 font-serif text-[32px] leading-tight">{fmtMoney(m.pay.grossProjected)}</dd>
-          <dd className="mt-1 text-sm text-zinc-400">before tax</dd>
+        <div className="py-6 pl-4 lg:border-r lg:border-zinc-700/70 lg:px-6">
+          <dt className="text-[13px] text-zinc-400">Week&apos;s pay</dt>
+          <dd className="text-gold-grad mt-2 font-serif text-[44px] font-bold leading-[0.9]">{fmtMoney(m.pay.grossProjected)}</dd>
+          <dd className="mt-1 text-[13px] text-zinc-400">before tax</dd>
         </div>
 
-        <div className="col-span-2 rounded-2xl bg-zinc-900 p-4 lg:col-span-1">
-          <dt className="text-[13px] font-semibold text-zinc-400">Already worked</dt>
-          <dd className="mt-1 font-serif text-[32px] leading-tight text-emerald-300">{fmtMoney(m.pay.verified)}</dd>
-          <dd className="mt-1 text-sm text-zinc-400">{fmtMoney(m.pay.grossProjected - m.pay.verified)} still to work</dd>
+        <div className="col-span-2 border-t border-zinc-700/70 py-6 lg:col-span-1 lg:border-t-0 lg:pl-6">
+          <dt className="text-[13px] text-zinc-400">Already worked</dt>
+          <dd className="mt-2 font-serif text-[44px] font-bold leading-[0.9] text-emerald-300">{fmtMoney(m.pay.verified)}</dd>
+          <dd className="mt-1 text-[13px] text-zinc-400">{fmtMoney(m.pay.grossProjected - m.pay.verified)} still to work</dd>
         </div>
       </dl>
     </section>

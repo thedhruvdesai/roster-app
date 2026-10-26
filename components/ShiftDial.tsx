@@ -141,7 +141,7 @@ export function ShiftDial({ shifts, employers, now, focus, centre, caption }: Pr
         <circle cx={hx} cy={hy} r={3.5} style={{ fill: "rgb(var(--accent))" }} />
       </svg>
       <figcaption className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="font-serif text-[38px] leading-none text-zinc-50">{centre}</span>
+        <span className="font-serif text-[46px] font-bold leading-none text-zinc-50">{centre}</span>
         <span className="mt-1.5 text-[13px] font-medium text-zinc-400">{caption}</span>
       </figcaption>
     </figure>

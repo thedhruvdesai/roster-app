@@ -2,17 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* SF Pro on Apple devices; Inter (closest open match) everywhere else */
-@font-face {
-  font-family: "Inter";
-  src: url("/fonts/inter.woff2") format("woff2");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face { font-family: "Instrument Serif"; src: url("/fonts/serif.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Instrument Serif"; src: url("/fonts/serif-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+/* Geist for text, Big Shoulders Display for the big signage figures. Both variable, latin only. */
+@font-face { font-family: "Geist"; src: url("/fonts/geist.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Big Shoulders"; src: url("/fonts/display.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
 :root { color-scheme: dark; }
 html { background: rgb(var(--z950)); }
 /* Onyx: black with a low gold light from above and a fine film grain */
@@ -29,11 +21,11 @@ body { -webkit-tap-highlight-color: transparent; font-feature-settings: "tnum" 1
 :focus-visible { outline: 3px solid rgb(10 132 255 / 0.8); outline-offset: 2px; border-radius: 6px; }
 
 /* iOS type scale helpers. Numbers are tabular so times and money line up. */
-body { font-size: 17px; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+body { font-size: 16px; letter-spacing: -0.015em; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
 .font-display { letter-spacing: -0.035em; }
 .type-board { font-weight: 700; letter-spacing: -0.05em; line-height: 0.95; }
 .type-wide { font-weight: 700; letter-spacing: -0.04em; }
-.large-title { font-family: "Instrument Serif", Georgia, serif; font-size: 46px; line-height: 1; font-weight: 400; letter-spacing: -0.015em; }
+.large-title { font-family: "Big Shoulders", "Geist", sans-serif; font-size: 56px; line-height: 0.9; font-weight: 800; letter-spacing: -0.01em; }
 /* Translucent "material" used by the nav bar, tab bar and sheets */
 .material { background: rgb(30 30 30 / 0.72); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
 .hairline { box-shadow: inset 0 -0.5px 0 rgb(84 84 88 / 0.65); }
@@ -74,7 +66,12 @@ body { font-size: 17px; letter-spacing: -0.03em; font-variant-numeric: tabular-n
 .bg-vest { background-image: linear-gradient(180deg, var(--metal-1) 0%, var(--metal-2) 48%, var(--metal-3) 100%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 6px 18px -6px rgb(var(--gold) / 0.45); }
 .text-gold-grad { background: linear-gradient(180deg, var(--metal-1), var(--metal-3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 /* The board: serif numerals, like a watch dial */
-.type-board { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; letter-spacing: -0.03em; line-height: 0.9; }
+.type-board { font-family: "Big Shoulders", "Geist", sans-serif; font-weight: 800; letter-spacing: -0.015em; line-height: 0.82; }
 
 /* Theme changes fade rather than snap */
 body, .bg-zinc-900, .bg-zinc-925, .bg-vest { transition: background-color 300ms ease, box-shadow 300ms ease; }
+
+/* Page-load reveal: one orchestrated moment. Lines rise out of a mask, staggered. */
+@keyframes rise { from { transform: translateY(105%); opacity: 0; } to { transform: none; opacity: 1; } }
+.mask { display: block; overflow: hidden; padding-bottom: 0.04em; }
+.reveal { animation: rise 900ms cubic-bezier(0.16, 1, 0.3, 1) both; }

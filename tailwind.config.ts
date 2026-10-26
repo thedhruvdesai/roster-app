@@ -40,10 +40,11 @@ const config: Config = {
         vest: { DEFAULT: "rgb(var(--accent) / <alpha-value>)", soft: "rgb(var(--accent-soft) / <alpha-value>)", ink: "rgb(var(--accent-ink) / <alpha-value>)" },
       },
       fontFamily: {
-        sans: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "Inter", "system-ui", "Segoe UI", "Roboto", "sans-serif"],
-        display: ["-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', "Inter", "system-ui", "sans-serif"],
-        serif: ["Instrument Serif", "Georgia", "serif"],
-        mono: ["-apple-system", "BlinkMacSystemFont", "Inter", "system-ui", "sans-serif"],
+        sans: ["Geist", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["Geist", "-apple-system", "sans-serif"],
+        mono: ["Geist", "ui-monospace", "monospace"],
+        // "serif" is the big signage face throughout (kept the name so existing classes follow)
+        serif: ["Big Shoulders", "Geist", "sans-serif"],
       },
     },
   },

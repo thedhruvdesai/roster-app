@@ -80,73 +80,71 @@ export function AppShell() {
   const current = TABS.find((t) => t.id === tab)!;
 
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[260px_1fr]">
-      {/* Mac / iPad: sidebar */}
-      <aside className="sticky top-0 hidden h-dvh flex-col bg-zinc-925 px-3 pb-6 pt-6 md:flex" style={{ boxShadow: "inset -0.5px 0 0 rgb(84 84 88 / 0.65)" }}>
-        <div className="mb-7 px-2">
-          <Logo size={34} />
-        </div>
-        <nav className="space-y-0.5" aria-label="Main">
-          {TABS.map(({ id, title, icon: Icon }) => (
-            <button
-              key={id}
-              onClick={() => changeTab(id)}
-              aria-current={tab === id ? "page" : undefined}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-[10px] px-2.5 py-2 text-left text-[15px] transition-colors",
-                tab === id ? "bg-zinc-800 font-semibold text-zinc-50" : "text-zinc-300 hover:bg-zinc-900"
-              )}
-            >
-              <Icon size={19} className={tab === id ? "text-vest" : "text-zinc-400"} />
-              {title}
-            </button>
-          ))}
-        </nav>
-        {hydrated && (
-          <button
-            onClick={() => openAdd(addDate)}
-            className="mt-auto flex h-11 items-center justify-center gap-2 rounded-full bg-vest text-[17px] font-semibold text-vest-ink active:opacity-70"
-          >
-            <Plus size={19} strokeWidth={2.6} /> New Shift
+    <div className="min-h-dvh">
+      {/* Website-style top bar: logo, sections, primary action, menu */}
+      <header className={cn("material sticky top-0 z-40 pt-[env(safe-area-inset-top)] transition-shadow", collapsed && "hairline")}>
+        <div className="mx-auto flex h-12 max-w-[1280px] items-center gap-6 px-4 sm:px-6 md:h-16 md:px-10">
+          <button onClick={() => changeTab("roster")} aria-label="ShiftDesk home" className="shrink-0">
+            <span className="md:hidden"><LogoMark size={28} /></span>
+            <span className="hidden md:inline-flex"><Logo size={32} /></span>
           </button>
+
+          <nav className="hidden h-full items-center gap-1 md:flex" aria-label="Main">
+            {TABS.map(({ id, title }) => (
+              <button
+                key={id}
+                onClick={() => changeTab(id)}
+                aria-current={tab === id ? "page" : undefined}
+                className={cn(
+                  "relative h-full px-3 text-[15px] transition-colors",
+                  tab === id ? "font-medium text-zinc-50" : "text-zinc-400 hover:text-zinc-100"
+                )}
+              >
+                {title}
+                {tab === id && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-vest" />}
+              </button>
+            ))}
+          </nav>
+
+          {/* Phone: page name appears once the big title scrolls away */}
+          <span className={cn("flex-1 text-center text-[17px] font-semibold text-zinc-50 transition-opacity md:hidden", collapsed ? "opacity-100" : "opacity-0")}>
+            {current.short}
+          </span>
+
+          <div className="ml-auto flex items-center gap-2">
+            {hydrated && (
+              <button
+                onClick={() => openAdd(addDate)}
+                className="bg-vest hidden h-10 items-center gap-2 rounded-full px-5 text-[15px] font-semibold text-vest-ink active:opacity-70 md:inline-flex"
+              >
+                <Plus size={18} strokeWidth={2.6} /> New shift
+              </button>
+            )}
+            {hydrated && <MenuButton onNewShift={() => openAdd(addDate)} />}
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-[1280px] px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 md:px-10 md:pb-16 md:pt-6">
+        {/* On the roster the hero carries the page, so its title is for screen readers */}
+        <h1 ref={titleRef} className={cn("large-title mb-5 mt-3 text-zinc-50 md:mb-8 md:mt-6", tab === "roster" && "sr-only")}>
+          {current.title}
+        </h1>
+        {!hydrated ? (
+          <Skeleton />
+        ) : (
+          <div className="space-y-10">
+            {tab === "roster" && (
+              <>
+                <SummaryMetricsBar />
+                <WeeklyRosterView onAdd={openAdd} onEdit={openEdit} />
+              </>
+            )}
+            {tab === "pay" && <PaySummaryView onEdit={openEdit} />}
+            {tab === "employers" && <EmployersView />}
+          </div>
         )}
-      </aside>
-
-      <div className="min-w-0">
-        {/* Phone: translucent nav bar with inline title once scrolled */}
-        <header className={cn("material sticky top-0 z-40 pt-[env(safe-area-inset-top)] transition-shadow md:hidden", collapsed && "hairline")}>
-          <div className="relative flex h-11 items-center justify-center px-4">
-            <LogoMark size={26} className="absolute left-4" />
-            {hydrated && <MenuButton onNewShift={() => openAdd(addDate)} className="absolute right-2" />}
-            <span className={cn("text-[17px] font-semibold text-zinc-50 transition-opacity", collapsed ? "opacity-100" : "opacity-0")}>
-              {current.short}
-            </span>
-          </div>
-        </header>
-
-        <main className="mx-auto max-w-[1200px] px-4 pb-[calc(8rem+env(safe-area-inset-bottom))] sm:px-6 md:px-10 md:pb-12 md:pt-8">
-          <div className="mb-4 mt-1 flex items-center justify-between gap-4 md:mb-6 md:mt-0">
-            <h1 ref={titleRef} className="large-title text-zinc-50">
-              {current.title}
-            </h1>
-            {hydrated && <MenuButton onNewShift={() => openAdd(addDate)} className="hidden md:flex" />}
-          </div>
-          {!hydrated ? (
-            <Skeleton />
-          ) : (
-            <div className="space-y-6">
-              {tab === "roster" && (
-                <>
-                  <SummaryMetricsBar />
-                  <WeeklyRosterView onAdd={openAdd} onEdit={openEdit} />
-                </>
-              )}
-              {tab === "pay" && <PaySummaryView onEdit={openEdit} />}
-              {tab === "employers" && <EmployersView />}
-            </div>
-          )}
-        </main>
-      </div>
+      </main>
 
       {/* Phone: floating add */}
       {hydrated && tab === "roster" && !modal.open && (
