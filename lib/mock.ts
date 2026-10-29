@@ -17,6 +17,18 @@ export const SAI_EMPLOYER: Employer = {
   sites: [],
 };
 
+/** Added Oct 2026. $27/h confirmed; pay cycle, payment method and sites still placeholders. */
+export const PSG_EMPLOYER: Employer = {
+  id: "emp_psg",
+  name: "PSG Security",
+  code: "PSG",
+  color: "amber",
+  defaultRate: 27.0,
+  payCycle: "weekly",
+  paymentType: "payroll",
+  sites: [],
+};
+
 export const DEFAULT_EMPLOYERS: Employer[] = [
   {
     id: "emp_border",
@@ -83,6 +95,7 @@ export const DEFAULT_EMPLOYERS: Employer[] = [
     sites: [],
   },
   SAI_EMPLOYER,
+  PSG_EMPLOYER,
 ];
 
 /** Week the fixed roster starts from (Mon 28/09/2026) */

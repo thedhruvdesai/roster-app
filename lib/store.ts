@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { addDays, startOfWeek, todayISO } from "./dates";
-import { DEFAULT_EMPLOYERS, DEFAULT_RECURRING, SAI_EMPLOYER } from "./mock";
+import { DEFAULT_EMPLOYERS, DEFAULT_RECURRING, PSG_EMPLOYER, SAI_EMPLOYER } from "./mock";
 import { calcShift } from "./pay";
 import type { Employer, ISODate, PaymentStatus, RecurringShift, Shift, WeekNote } from "./types";
 import type { ThemeId } from "./themes";
@@ -214,7 +214,7 @@ export const useRoster = create<RosterState>()(
     {
       // v2 key: starts fresh with real employers instead of the old demo data
       name: "shiftdesk-roster-v2",
-      version: 7,
+      version: 8,
       // Adds employers introduced after a device first saved its data, without touching anything else
       migrate: (persisted, version) => {
         const st = (persisted ?? {}) as { employers?: Employer[]; theme?: string };
@@ -233,6 +233,10 @@ export const useRoster = create<RosterState>()(
         if (version < 6 && (!st.theme || st.theme === "signal")) st.theme = "base";
         // v7: only Base, Signal and Platinum remain; anything else falls back to Base
         if (version < 7 && !["base", "signal", "platinum"].includes(st.theme as string)) st.theme = "base";
+        // v8: PSG Security added ($27/h)
+        if (version < 8 && Array.isArray(st.employers) && !st.employers.some((e) => e.id === PSG_EMPLOYER.id)) {
+          st.employers = [...st.employers, PSG_EMPLOYER];
+        }
         return st as RosterState;
       },
       storage: createJSONStorage(() => localStorage),
