@@ -29,6 +29,22 @@ export const PSG_EMPLOYER: Employer = {
   sites: [],
 };
 
+/** Added Nov 2026. $30/h weekdays, $35/h Sat & Sun; pay cycle and sites still placeholders. */
+export const JR_EMPLOYER: Employer = {
+  id: "emp_jr",
+  name: "JR Security",
+  code: "JR",
+  color: "cyan",
+  defaultRate: 30.0,
+  weekendRate: 35.0,
+  payCycle: "weekly",
+  paymentType: "payroll",
+  sites: [],
+};
+
+/** CityView was removed in Nov 2026; past CityView shifts stay as pay history */
+export const RETIRED_EMPLOYER_IDS = ["emp_cityview"];
+
 export const DEFAULT_EMPLOYERS: Employer[] = [
   {
     id: "emp_border",
@@ -62,17 +78,6 @@ export const DEFAULT_EMPLOYERS: Employer[] = [
     sites: [{ id: "st_const_thu", name: "Constant – Thursday shift" }],
   },
   {
-    id: "emp_cityview",
-    name: "CityView Security",
-    code: "CITYVIEW",
-    color: "violet",
-    defaultRate: 27.0,
-    payCycle: "fortnightly",
-    paymentType: "cash",
-    timesheetVia: "WhatsApp (saved format)",
-    sites: [{ id: "st_cityview", name: "CityView – Night Static" }],
-  },
-  {
     id: "emp_besecure",
     name: "BeSecure",
     code: "BESEC",
@@ -96,6 +101,7 @@ export const DEFAULT_EMPLOYERS: Employer[] = [
   },
   SAI_EMPLOYER,
   PSG_EMPLOYER,
+  JR_EMPLOYER,
 ];
 
 /** Week the fixed roster starts from (Mon 28/09/2026) */
@@ -120,17 +126,6 @@ export const DEFAULT_RECURRING: RecurringShift[] = [
     weekdays: [3], // Thu
     start: "16:00",
     end: "22:00",
-    breakMins: 0,
-    startDate: ROSTER_START,
-    active: true,
-  },
-  {
-    id: "rec_cityview_weekend",
-    employerId: "emp_cityview",
-    site: "CityView – Night Static",
-    weekdays: [4, 5, 6], // Fri, Sat, Sun
-    start: "18:00",
-    end: "06:00",
     breakMins: 0,
     startDate: ROSTER_START,
     active: true,

@@ -11,7 +11,7 @@ import {
   fmtHours,
   fmtMoney,
 } from "@/lib/pay";
-import { resolveRate, useRoster } from "@/lib/store";
+import { isWeekend, resolveRate, useRoster } from "@/lib/store";
 import { deleteShiftWithUndo } from "@/lib/actions";
 import { toast } from "@/lib/toast";
 import { addShiftToCalendar, googleCalendarUrl } from "@/lib/reminders";
@@ -59,7 +59,7 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
       start: "18:00",
       end: "02:00",
       breakMins: "30",
-      hourlyRate: emp ? String(resolveRate(employers, emp.id, site)) : "",
+      hourlyRate: emp ? String(resolveRate(employers, emp.id, site, defaultDate)) : "",
       status: defaultDate < todayISO() ? "worked" : "scheduled",
       notes: "",
     };
@@ -129,19 +129,24 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
 
   const applyPreset = (p: (typeof presets)[number]) => {
     setRateTouched(true);
-    setD((prev) => ({ ...prev, employerId: p.employerId, site: p.site, start: p.start, end: p.end, breakMins: String(p.breakMins), hourlyRate: String(p.rate) }));
+    setD((prev) => {
+      // Employers with a weekend rate get the right rate for the chosen day
+      const emp = employers.find((e) => e.id === p.employerId);
+      const rate = emp?.weekendRate != null ? resolveRate(employers, p.employerId, p.site, prev.date) : p.rate;
+      return { ...prev, employerId: p.employerId, site: p.site, start: p.start, end: p.end, breakMins: String(p.breakMins), hourlyRate: String(rate) };
+    });
   };
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) =>
     setD((prev) => {
       const next = { ...prev, [k]: v };
       // Auto-apply employer/site default rate until the user edits the rate by hand
-      if (!rateTouched && (k === "employerId" || k === "site")) {
+      if (!rateTouched && (k === "employerId" || k === "site" || k === "date")) {
         if (k === "employerId") {
           const emp = employers.find((e) => e.id === v);
           next.site = emp?.sites[0]?.name ?? "";
         }
-        next.hourlyRate = String(resolveRate(employers, next.employerId, next.site));
+        next.hourlyRate = String(resolveRate(employers, next.employerId, next.site, next.date));
       } else if (k === "employerId") {
         const emp = employers.find((e) => e.id === v);
         if (!emp?.sites.some((s) => s.name === prev.site)) next.site = emp?.sites[0]?.name ?? "";
@@ -364,7 +369,7 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
               error={err("hourlyRate")}
               hint={
                 employer
-                  ? `Default for this site: $${resolveRate(employers, employer.id, d.site).toFixed(2)}/h`
+                  ? `Default for this ${employer.weekendRate != null && isWeekend(d.date) ? "weekend " : ""}shift: $${resolveRate(employers, employer.id, d.site, d.date).toFixed(2)}/h${employer.weekendRate != null ? ` (weekdays $${employer.defaultRate.toFixed(2)}, weekends $${employer.weekendRate.toFixed(2)})` : ""}`
                   : undefined
               }
             >

@@ -41,6 +41,8 @@ export interface Employer {
   color: BadgeColor;
   /** Default base hourly rate in AUD */
   defaultRate: number;
+  /** Saturday & Sunday rate, if different (shift's start day decides) */
+  weekendRate?: number;
   payCycle: "weekly" | "fortnightly" | "monthly";
   contactName?: string;
   contactPhone?: string;

@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { addDays, startOfWeek, todayISO } from "./dates";
-import { DEFAULT_EMPLOYERS, DEFAULT_RECURRING, PSG_EMPLOYER, SAI_EMPLOYER } from "./mock";
+import { DEFAULT_EMPLOYERS, DEFAULT_RECURRING, JR_EMPLOYER, PSG_EMPLOYER, RETIRED_EMPLOYER_IDS, SAI_EMPLOYER } from "./mock";
 import { calcShift } from "./pay";
 import type { Employer, ISODate, PaymentStatus, RecurringShift, Shift, WeekNote } from "./types";
 import type { ThemeId } from "./themes";
@@ -137,7 +137,7 @@ export const useRoster = create<RosterState>()(
             if (!r.weekdays.includes(dow as RecurringShift["weekdays"][number])) continue;
             const key = skipKey(r.id, d);
             if (skip.has(key) || have.has(key)) continue;
-            const rate = r.hourlyRate ?? resolveRate(employers, r.employerId, r.site);
+            const rate = r.hourlyRate ?? resolveRate(employers, r.employerId, r.site, d);
             const base = { date: d, start: r.start, end: r.end, breakMins: r.breakMins, hourlyRate: rate };
             created.push({
               id: uid("sh"),
@@ -214,10 +214,10 @@ export const useRoster = create<RosterState>()(
     {
       // v2 key: starts fresh with real employers instead of the old demo data
       name: "shiftdesk-roster-v2",
-      version: 8,
+      version: 9,
       // Adds employers introduced after a device first saved its data, without touching anything else
       migrate: (persisted, version) => {
-        const st = (persisted ?? {}) as { employers?: Employer[]; theme?: string };
+        const st = (persisted ?? {}) as { employers?: Employer[]; theme?: string; recurring?: RecurringShift[]; shifts?: Shift[]; skipped?: string[] };
         if (version < 3 && Array.isArray(st.employers) && !st.employers.some((e) => e.id === SAI_EMPLOYER.id)) {
           st.employers = [...st.employers, SAI_EMPLOYER];
         }
@@ -236,6 +236,23 @@ export const useRoster = create<RosterState>()(
         // v8: PSG Security added ($27/h)
         if (version < 8 && Array.isArray(st.employers) && !st.employers.some((e) => e.id === PSG_EMPLOYER.id)) {
           st.employers = [...st.employers, PSG_EMPLOYER];
+        }
+        // v9: JR Security added ($30 weekdays / $35 weekends); CityView removed
+        if (version < 9 && Array.isArray(st.employers)) {
+          if (!st.employers.some((e) => e.id === JR_EMPLOYER.id)) st.employers = [...st.employers, JR_EMPLOYER];
+          const today = todayISO();
+          const gone = new Set(RETIRED_EMPLOYER_IDS);
+          const recIds = new Set((st.recurring ?? []).filter((r) => gone.has(r.employerId)).map((r) => r.id));
+          st.recurring = (st.recurring ?? []).filter((r) => !recIds.has(r.id));
+          st.skipped = (st.skipped ?? []).filter((k) => !recIds.has(k.split("|")[0]));
+          // Upcoming CityView shifts go; worked and paid ones stay as pay history
+          st.shifts = (st.shifts ?? [])
+            .filter((x) => !(gone.has(x.employerId) && x.status === "scheduled" && x.date >= today))
+            .map((x) => (x.recurringId && recIds.has(x.recurringId) ? { ...x, recurringId: undefined, customised: undefined } : x));
+          const keep = new Set(st.shifts.map((x) => x.employerId));
+          st.employers = st.employers
+            .filter((e) => !gone.has(e.id) || keep.has(e.id))
+            .map((e) => (gone.has(e.id) ? { ...e, archived: true } : e));
         }
         return st as RosterState;
       },
@@ -256,9 +273,18 @@ export const useRoster = create<RosterState>()(
 );
 
 /** Resolves the default rate for an employer + site combination */
-export function resolveRate(employers: Employer[], employerId: string, siteName?: string): number {
+export function resolveRate(employers: Employer[], employerId: string, siteName?: string, date?: ISODate): number {
   const emp = employers.find((e) => e.id === employerId);
   if (!emp) return 0;
   const site = emp.sites.find((s) => s.name === siteName);
-  return site?.rateOverride ?? emp.defaultRate;
+  if (site?.rateOverride != null) return site.rateOverride;
+  if (date && emp.weekendRate != null && isWeekend(date)) return emp.weekendRate;
+  return emp.defaultRate;
 }
+
+/** Saturday or Sunday (by the shift's start date) */
+export const isWeekend = (date: ISODate) => [0, 6].includes(new Date(date + "T00:00:00").getDay());
+
+/** "$30/h" or "$30/h · $35 weekends" */
+export const fmtRates = (e: Pick<Employer, "defaultRate" | "weekendRate">) =>
+  `$${e.defaultRate.toFixed(2)}/h${e.weekendRate != null ? ` · $${e.weekendRate.toFixed(2)} weekends` : ""}`;

@@ -22,7 +22,7 @@ import {
   isOverdueForUpdate,
   shiftsInRange,
 } from "@/lib/pay";
-import { useRoster } from "@/lib/store";
+import { useRoster, fmtRates } from "@/lib/store";
 import { setStatusWithToast } from "@/lib/actions";
 import type { ISODate, PaymentStatus, Shift } from "@/lib/types";
 import { PAYMENT_STATUS_LABEL } from "@/lib/types";
@@ -190,7 +190,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                   <div className="min-w-0">
                     <EmployerBadge employer={e} />
                     <p className="mt-1 text-sm text-zinc-500">
-                      No shifts · ${e.defaultRate.toFixed(2)}/h · <span className="capitalize">{e.payCycle}</span>
+                      No shifts · {fmtRates(e)} · <span className="capitalize">{e.payCycle}</span>
                     </p>
                   </div>
                   <p className="shrink-0 font-display text-xl font-semibold text-zinc-600">{fmtMoney(0)}</p>

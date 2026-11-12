@@ -74,7 +74,10 @@ export function EmployersView() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-3 gap-2 rounded-lg bg-zinc-950 p-3">
-                  <Mini label="Base rate" value={`$${e.defaultRate.toFixed(2)}`} />
+                  <Mini
+                    label={e.weekendRate != null ? "Weekday / wknd" : "Base rate"}
+                    value={e.weekendRate != null ? `$${e.defaultRate.toFixed(0)} / $${e.weekendRate.toFixed(0)}` : `$${e.defaultRate.toFixed(2)}`}
+                  />
                   <Mini label="This week" value={line ? fmtHours(line.hours) : "0h"} />
                   <Mini label="Earned" value={line ? fmtMoney(line.total) : "$0"} />
                 </div>
@@ -147,6 +150,7 @@ function EmployerEditor({ employer, onClose }: { employer: Employer | null; onCl
   const [code, setCode] = useState(employer?.code ?? "");
   const [color, setColor] = useState<BadgeColor>(employer?.color ?? BADGE_COLORS.find((c) => !usedColors.includes(c)) ?? "cyan");
   const [rate, setRate] = useState(employer ? String(employer.defaultRate) : "");
+  const [weekendRate, setWeekendRate] = useState(employer?.weekendRate != null ? String(employer.weekendRate) : "");
   const [payCycle, setPayCycle] = useState<Employer["payCycle"]>(employer?.payCycle ?? "weekly");
   const [contactName, setContactName] = useState(employer?.contactName ?? "");
   const [contactPhone, setContactPhone] = useState(employer?.contactPhone ?? "");
@@ -175,6 +179,8 @@ function EmployerEditor({ employer, onClose }: { employer: Employer | null; onCl
     const r = Number(rate);
     if (!name.trim()) return setError("Company name is required.");
     if (!Number.isFinite(r) || r <= 0) return setError("Enter a default hourly rate above $0.");
+    const wr = weekendRate.trim() ? Number(weekendRate) : undefined;
+    if (wr != null && (!Number.isFinite(wr) || wr <= 0)) return setError("Weekend rate must be above $0, or leave it empty.");
     const cleanSites: Site[] = sites
       .filter((s) => s.name.trim())
       .map((s) => ({ id: s.id, name: s.name.trim(), rateOverride: s.rate.trim() ? Number(s.rate) : undefined }));
@@ -184,6 +190,7 @@ function EmployerEditor({ employer, onClose }: { employer: Employer | null; onCl
       code: (code.trim() || autoCode(name)).toUpperCase().slice(0, 8),
       color,
       defaultRate: Math.round(r * 100) / 100,
+      weekendRate: wr != null ? Math.round(wr * 100) / 100 : undefined,
       payCycle,
       contactName: contactName.trim() || undefined,
       contactPhone: contactPhone.trim() || undefined,
@@ -241,8 +248,11 @@ function EmployerEditor({ employer, onClose }: { employer: Employer | null; onCl
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Default base rate (AUD/h)">
+            <Field label="Weekday rate (AUD/h)">
               <input type="number" step={0.01} min={0} inputMode="decimal" className={cn(inputCls, "tabular-nums")} value={rate} onChange={(e) => setRate(e.target.value)} placeholder="34.50" />
+            </Field>
+            <Field label="Weekend rate (optional)" hint="Sat & Sun shifts. Empty = same as weekday">
+              <input type="number" step={0.01} min={0} inputMode="decimal" className={cn(inputCls, "tabular-nums")} value={weekendRate} onChange={(e) => setWeekendRate(e.target.value)} placeholder="Same" />
             </Field>
             <Field label="Pay cycle">
               <select className={inputCls} value={payCycle} onChange={(e) => setPayCycle(e.target.value as Employer["payCycle"])}>
