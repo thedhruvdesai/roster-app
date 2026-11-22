@@ -75,12 +75,23 @@ export function EmployersView() {
 
                 <div className="mt-4 grid grid-cols-3 gap-2 rounded-lg bg-zinc-950 p-3">
                   <Mini
-                    label={e.weekendRate != null ? "Weekday / wknd" : "Base rate"}
-                    value={e.weekendRate != null ? `$${e.defaultRate.toFixed(0)} / $${e.weekendRate.toFixed(0)}` : `$${e.defaultRate.toFixed(2)}`}
+                    label={e.penaltyRates ? "Award from" : e.weekendRate != null ? "Weekday / wknd" : "Base rate"}
+                    value={e.penaltyRates ? `$${e.penaltyRates.weekday.toFixed(2)}` : e.weekendRate != null ? `$${e.defaultRate.toFixed(0)} / $${e.weekendRate.toFixed(0)}` : `$${e.defaultRate.toFixed(2)}`}
                   />
                   <Mini label="This week" value={line ? fmtHours(line.hours) : "0h"} />
                   <Mini label="Earned" value={line ? fmtMoney(line.total) : "$0"} />
                 </div>
+
+                {e.penaltyRates && (
+                  <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[12px] tabular-nums">
+                    {([["Weekday", e.penaltyRates.weekday], ["Weeknight", e.penaltyRates.weeknight], ["Saturday", e.penaltyRates.saturday], ["Sunday", e.penaltyRates.sunday]] as const).map(([l, v]) => (
+                      <div key={l} className="rounded-lg bg-zinc-950 px-1 py-2">
+                        <p className="text-zinc-500">{l}</p>
+                        <p className="mt-0.5 font-semibold text-zinc-50">${v.toFixed(2)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <ul className="mb-3 mt-3 space-y-1.5">
                   {e.sites.map((s) => (
@@ -151,6 +162,13 @@ function EmployerEditor({ employer, onClose }: { employer: Employer | null; onCl
   const [color, setColor] = useState<BadgeColor>(employer?.color ?? BADGE_COLORS.find((c) => !usedColors.includes(c)) ?? "cyan");
   const [rate, setRate] = useState(employer ? String(employer.defaultRate) : "");
   const [weekendRate, setWeekendRate] = useState(employer?.weekendRate != null ? String(employer.weekendRate) : "");
+  const pr = employer?.penaltyRates;
+  const [award, setAward] = useState({
+    weekday: pr ? String(pr.weekday) : "",
+    weeknight: pr ? String(pr.weeknight) : "",
+    saturday: pr ? String(pr.saturday) : "",
+    sunday: pr ? String(pr.sunday) : "",
+  });
   const [payCycle, setPayCycle] = useState<Employer["payCycle"]>(employer?.payCycle ?? "weekly");
   const [contactName, setContactName] = useState(employer?.contactName ?? "");
   const [contactPhone, setContactPhone] = useState(employer?.contactPhone ?? "");
@@ -181,6 +199,18 @@ function EmployerEditor({ employer, onClose }: { employer: Employer | null; onCl
     if (!Number.isFinite(r) || r <= 0) return setError("Enter a default hourly rate above $0.");
     const wr = weekendRate.trim() ? Number(weekendRate) : undefined;
     if (wr != null && (!Number.isFinite(wr) || wr <= 0)) return setError("Weekend rate must be above $0, or leave it empty.");
+    const awardVals = Object.values(award).map((v) => v.trim());
+    const awardFilled = awardVals.filter(Boolean).length;
+    if (awardFilled && (awardFilled < 4 || awardVals.some((v) => !(Number(v) > 0))))
+      return setError("Fill in all four award rates (above $0), or leave them all empty.");
+    const penaltyRates = awardFilled
+      ? {
+          weekday: Math.round(Number(award.weekday) * 100) / 100,
+          weeknight: Math.round(Number(award.weeknight) * 100) / 100,
+          saturday: Math.round(Number(award.saturday) * 100) / 100,
+          sunday: Math.round(Number(award.sunday) * 100) / 100,
+        }
+      : undefined;
     const cleanSites: Site[] = sites
       .filter((s) => s.name.trim())
       .map((s) => ({ id: s.id, name: s.name.trim(), rateOverride: s.rate.trim() ? Number(s.rate) : undefined }));
@@ -191,6 +221,7 @@ function EmployerEditor({ employer, onClose }: { employer: Employer | null; onCl
       color,
       defaultRate: Math.round(r * 100) / 100,
       weekendRate: wr != null ? Math.round(wr * 100) / 100 : undefined,
+      penaltyRates,
       payCycle,
       contactName: contactName.trim() || undefined,
       contactPhone: contactPhone.trim() || undefined,
@@ -251,6 +282,26 @@ function EmployerEditor({ employer, onClose }: { employer: Employer | null; onCl
             <Field label="Weekday rate (AUD/h)">
               <input type="number" step={0.01} min={0} inputMode="decimal" className={cn(inputCls, "tabular-nums")} value={rate} onChange={(e) => setRate(e.target.value)} placeholder="34.50" />
             </Field>
+            <div className="col-span-2 rounded-xl bg-zinc-900 p-3">
+              <p className="text-[13px] font-semibold text-zinc-50">Award rates (optional)</p>
+              <p className="mb-2 text-[12px] text-zinc-500">Pays each hour by when it falls. Weeknight = Mon–Fri 6pm–6am. Leave empty for one flat rate.</p>
+              <div className="grid grid-cols-2 gap-2">
+                {(["weekday", "weeknight", "saturday", "sunday"] as const).map((k) => (
+                  <Field key={k} label={k === "weekday" ? "Weekday" : k === "weeknight" ? "Weeknight" : k === "saturday" ? "Saturday" : "Sunday"}>
+                    <input
+                      type="number"
+                      step={0.01}
+                      min={0}
+                      inputMode="decimal"
+                      className={cn(inputCls, "tabular-nums")}
+                      value={award[k]}
+                      onChange={(ev) => setAward((a) => ({ ...a, [k]: ev.target.value }))}
+                      placeholder="—"
+                    />
+                  </Field>
+                ))}
+              </div>
+            </div>
             <Field label="Weekend rate (optional)" hint="Sat & Sun shifts. Empty = same as weekday">
               <input type="number" step={0.01} min={0} inputMode="decimal" className={cn(inputCls, "tabular-nums")} value={weekendRate} onChange={(e) => setWeekendRate(e.target.value)} placeholder="Same" />
             </Field>

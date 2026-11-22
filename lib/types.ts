@@ -33,6 +33,14 @@ export interface Site {
   rateOverride?: number;
 }
 
+/** Casual award rates by when the hours fall. Weeknight = Mon–Fri hours from 6pm to 6am. */
+export interface PenaltyRates {
+  weekday: number;
+  weeknight: number;
+  saturday: number;
+  sunday: number;
+}
+
 export interface Employer {
   id: string;
   name: string;
@@ -43,6 +51,8 @@ export interface Employer {
   defaultRate: number;
   /** Saturday & Sunday rate, if different (shift's start day decides) */
   weekendRate?: number;
+  /** When set, shifts are paid by the hour at these rates (overrides defaultRate/weekendRate) */
+  penaltyRates?: PenaltyRates;
   payCycle: "weekly" | "fortnightly" | "monthly";
   contactName?: string;
   contactPhone?: string;
@@ -67,7 +77,10 @@ export interface Shift {
   start: HHMM;
   end: HHMM;
   breakMins: number;
+  /** Flat rate, or for award-rated shifts the weekday base (display only) */
   hourlyRate: number;
+  /** Award rates copied from the employer when the shift was made; pay is split by when hours fall */
+  rates?: PenaltyRates;
   status: PaymentStatus;
   notes?: string;
   /** Set when this shift was generated from a fixed weekly roster pattern */
@@ -84,6 +97,10 @@ export interface ShiftCalc {
   netMins: number;
   netHours: number;
   pay: number;
+  /** Average $/h actually earned (differs from hourlyRate on award-rated shifts) */
+  effectiveRate: number;
+  /** Hours in each award band, only for award-rated shifts */
+  bands?: { weekday: number; weeknight: number; saturday: number; sunday: number };
   overnight: boolean;
   startAt: Date;
   endAt: Date;

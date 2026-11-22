@@ -147,7 +147,7 @@ export function SummaryMetricsBar({ onAdd, onEdit, onNav }: { onAdd: () => void;
                     <Clock3 size={18} />
                   </span>
                   <span className="flex-1 text-[14px] text-zinc-300">
-                    {fmtHours(fc.netHours)} at ${focus.hourlyRate.toFixed(2)}/h
+                    {fmtHours(fc.netHours)} at ${fc.effectiveRate.toFixed(2)}/h{focus.rates ? " avg" : ""}
                     {fc.overnight ? ", finishes next morning" : ""}
                   </span>
                 </li>

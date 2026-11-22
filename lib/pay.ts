@@ -7,6 +7,7 @@ import type {
   Shift,
   ShiftCalc,
   WeeklyPaySummary,
+  PenaltyRates,
 } from "./types";
 
 export const WEEKLY_HOURS_LIMIT = 38;
@@ -27,7 +28,32 @@ export const fmtHours = (n: number) => `${roundHours(n).toFixed(2).replace(/\.00
  * - Start == end is treated as a 24h shift (explicitly allowed, rare).
  * - Break is clamped so net time never goes negative.
  */
-export function calcShift(input: Pick<Shift, "date" | "start" | "end" | "breakMins" | "hourlyRate">): ShiftCalc {
+type Band = keyof PenaltyRates;
+
+/** Which award band a moment falls in: weekends by day, Mon–Fri split at 6am and 6pm */
+function bandAt(dow: number, minuteOfDay: number): Band {
+  if (dow === 6) return "saturday";
+  if (dow === 0) return "sunday";
+  return minuteOfDay < 360 || minuteOfDay >= 1080 ? "weeknight" : "weekday";
+}
+
+/** Minutes worked in each band, walking the shift between band boundaries */
+export function splitBands(date: ISODate, startMins: number, endMins: number) {
+  const out: Record<Band, number> = { weekday: 0, weeknight: 0, saturday: 0, sunday: 0 };
+  const baseDow = new Date(date + "T00:00:00").getDay();
+  let m = startMins;
+  while (m < endMins) {
+    const day = Math.floor(m / 1440);
+    const mod = m % 1440;
+    const nextEdge = day * 1440 + (mod < 360 ? 360 : mod < 1080 ? 1080 : 1440);
+    const stop = Math.min(nextEdge, endMins);
+    out[bandAt((baseDow + day) % 7, mod)] += stop - m;
+    m = stop;
+  }
+  return out;
+}
+
+export function calcShift(input: Pick<Shift, "date" | "start" | "end" | "breakMins" | "hourlyRate"> & { rates?: PenaltyRates }): ShiftCalc {
   const s = timeToMins(input.start);
   let e = timeToMins(input.end);
   const overnight = e <= s;
@@ -37,12 +63,29 @@ export function calcShift(input: Pick<Shift, "date" | "start" | "end" | "breakMi
   const breakMins = Math.max(0, Math.min(input.breakMins || 0, grossMins));
   const netMins = grossMins - breakMins;
   const netHours = roundHours(netMins / 60);
-  const pay = roundMoney((netMins / 60) * (input.hourlyRate || 0));
+  let pay: number;
+  let bands: ShiftCalc["bands"];
+  if (input.rates && grossMins > 0) {
+    // Award rates: price each band, then take the unpaid break off at the shift's average rate
+    const mins = splitBands(input.date, s, e);
+    const grossPay = (Object.keys(mins) as Band[]).reduce((t, b) => t + (mins[b] / 60) * input.rates![b], 0);
+    pay = roundMoney(grossPay * (netMins / grossMins));
+    const k = netMins / grossMins;
+    bands = {
+      weekday: roundHours((mins.weekday / 60) * k),
+      weeknight: roundHours((mins.weeknight / 60) * k),
+      saturday: roundHours((mins.saturday / 60) * k),
+      sunday: roundHours((mins.sunday / 60) * k),
+    };
+  } else {
+    pay = roundMoney((netMins / 60) * (input.hourlyRate || 0));
+  }
+  const effectiveRate = netMins > 0 ? Math.round((pay / (netMins / 60)) * 100) / 100 : input.hourlyRate || 0;
 
   const startAt = combine(input.date, input.start);
   const endAt = combine(overnight ? addDays(input.date, 1) : input.date, input.end);
 
-  return { grossMins, netMins, netHours, pay, overnight, startAt, endAt };
+  return { grossMins, netMins, netHours, pay, effectiveRate, bands, overnight, startAt, endAt };
 }
 
 export function shiftsInRange(shifts: Shift[], from: ISODate, to: ISODate) {
@@ -107,7 +150,7 @@ export function buildPaySummary(
     line.shiftCount++;
     line.hours += c.netHours;
     line.total += c.pay;
-    if (!line.rates.includes(s.hourlyRate)) line.rates.push(s.hourlyRate);
+    if (!line.rates.includes(c.effectiveRate)) line.rates.push(c.effectiveRate);
 
     summary.totalHours += c.netHours;
     summary.grossProjected += c.pay;

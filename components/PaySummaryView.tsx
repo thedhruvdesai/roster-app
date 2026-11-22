@@ -325,7 +325,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                               {c.overnight && <span className="ml-1 text-sm text-indigo-300">next day</span>}
                             </td>
                             <td className="px-3 py-2.5 text-right tabular-nums text-zinc-300">{fmtHours(c.netHours)}</td>
-                            <td className="px-3 py-2.5 text-right tabular-nums text-zinc-400">${s.hourlyRate.toFixed(2)}</td>
+                            <td className="px-3 py-2.5 text-right tabular-nums text-zinc-400">${c.effectiveRate.toFixed(2)}</td>
                             <td className="px-3 py-2.5 text-right font-display text-lg font-semibold text-zinc-50">{fmtMoney(c.pay)}</td>
                             <td className="px-4 py-2.5">
                               <StatusSelect status={s.status} onChange={(st) => setStatusWithToast([s.id], st)} />
@@ -353,7 +353,7 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                           </button>
                           <div className="shrink-0 text-right">
                             <p className="font-semibold tabular-nums text-zinc-50">{fmtMoney(c.pay)}</p>
-                            <p className="text-xs tabular-nums text-zinc-500">{fmtHours(c.netHours)} × ${s.hourlyRate.toFixed(2)}</p>
+                            <p className="text-xs tabular-nums text-zinc-500">{fmtHours(c.netHours)} × ${c.effectiveRate.toFixed(2)}</p>
                           </div>
                         </div>
                         <div className="mt-2">

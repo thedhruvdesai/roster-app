@@ -45,14 +45,17 @@ export const JR_EMPLOYER: Employer = {
 /** CityView was removed in Nov 2026; past CityView shifts stay as pay history */
 export const RETIRED_EMPLOYER_IDS = ["emp_cityview"];
 
+export const BORDER_RATES = { weekday: 35.5, weeknight: 41.69, saturday: 49.7, sunday: 63.9 };
+
 export const DEFAULT_EMPLOYERS: Employer[] = [
   {
     id: "emp_border",
     name: "Border Security (COGC)",
     code: "BORDER",
     color: "sky",
-    // $27.00 base + 25% casual loading = $33.75/hr
-    defaultRate: 33.75,
+    // Casual award rates from payslip (Nov 2026). Weeknight = Mon–Fri 6pm–6am.
+    defaultRate: 35.5,
+    penaltyRates: BORDER_RATES,
     payCycle: "fortnightly",
     paymentType: "payroll",
     timesheetVia: "Email — Excel COGC Static Time Sheet, submit by Monday 9am",

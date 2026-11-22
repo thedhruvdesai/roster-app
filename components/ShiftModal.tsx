@@ -11,7 +11,7 @@ import {
   fmtHours,
   fmtMoney,
 } from "@/lib/pay";
-import { isWeekend, resolveRate, useRoster } from "@/lib/store";
+import { isWeekend, resolveRate, resolveRates, useRoster } from "@/lib/store";
 import { deleteShiftWithUndo } from "@/lib/actions";
 import { toast } from "@/lib/toast";
 import { addShiftToCalendar, googleCalendarUrl } from "@/lib/reminders";
@@ -35,6 +35,8 @@ interface Draft {
   end: string;
   breakMins: string;
   hourlyRate: string;
+  /** Pay by award bands (weekday / weeknight / Sat / Sun) instead of one flat rate */
+  useRates: boolean;
   status: PaymentStatus;
   notes: string;
 }
@@ -60,6 +62,7 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
       end: "02:00",
       breakMins: "30",
       hourlyRate: emp ? String(resolveRate(employers, emp.id, site, defaultDate)) : "",
+      useRates: emp ? !!resolveRates(employers, emp.id, site) : false,
       status: defaultDate < todayISO() ? "worked" : "scheduled",
       notes: "",
     };
@@ -80,6 +83,7 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
         end: shift.end,
         breakMins: String(shift.breakMins),
         hourlyRate: String(shift.hourlyRate),
+        useRates: !!shift.rates,
         status: shift.status,
         notes: shift.notes ?? "",
       });
@@ -133,7 +137,8 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
       // Employers with a weekend rate get the right rate for the chosen day
       const emp = employers.find((e) => e.id === p.employerId);
       const rate = emp?.weekendRate != null ? resolveRate(employers, p.employerId, p.site, prev.date) : p.rate;
-      return { ...prev, employerId: p.employerId, site: p.site, start: p.start, end: p.end, breakMins: String(p.breakMins), hourlyRate: String(rate) };
+      const useRates = !!resolveRates(employers, p.employerId, p.site);
+      return { ...prev, employerId: p.employerId, site: p.site, start: p.start, end: p.end, breakMins: String(p.breakMins), hourlyRate: String(useRates ? emp!.defaultRate : rate), useRates };
     });
   };
 
@@ -147,6 +152,7 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
           next.site = emp?.sites[0]?.name ?? "";
         }
         next.hourlyRate = String(resolveRate(employers, next.employerId, next.site, next.date));
+        next.useRates = !!resolveRates(employers, next.employerId, next.site);
       } else if (k === "employerId") {
         const emp = employers.find((e) => e.id === v);
         if (!emp?.sites.some((s) => s.name === prev.site)) next.site = emp?.sites[0]?.name ?? "";
@@ -156,12 +162,15 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
 
   // ── Validation + live maths ───────────────────────────
   const breakNum = Number(d.breakMins);
-  const rateNum = Number(d.hourlyRate);
   const timesOk = isValidTime(d.start) && isValidTime(d.end);
+  // Award rates: keep the ones saved on this shift; otherwise take the employer's current ones
+  const empNow = employers.find((e) => e.id === d.employerId);
+  const rates = d.useRates ? (shift?.rates && shift.employerId === d.employerId ? shift.rates : empNow?.penaltyRates) : undefined;
+  const rateNum = rates ? rates.weekday : Number(d.hourlyRate);
 
   const calc = useMemo(
-    () => (timesOk ? calcShift({ date: d.date, start: d.start, end: d.end, breakMins: breakNum || 0, hourlyRate: rateNum || 0 }) : null),
-    [d.date, d.start, d.end, breakNum, rateNum, timesOk]
+    () => (timesOk ? calcShift({ date: d.date, start: d.start, end: d.end, breakMins: breakNum || 0, hourlyRate: rateNum || 0, rates }) : null),
+    [d.date, d.start, d.end, breakNum, rateNum, timesOk, rates]
   );
 
   const errors: Partial<Record<keyof Draft, string>> = {};
@@ -210,6 +219,7 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
       end: d.end,
       breakMins: breakNum,
       hourlyRate: Math.round(rateNum * 100) / 100,
+      rates,
       status: d.status,
       notes: d.notes.trim() || undefined,
     };
@@ -364,6 +374,35 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
                 ))}
               </div>
             </Field>
+            {employer?.penaltyRates && d.useRates && rates ? (
+              <Field label="Pay rate">
+                <div className="rounded-[10px] bg-zinc-800 px-3 py-2.5 text-[13px] text-zinc-300">
+                  <p className="font-semibold text-zinc-50">Award rates</p>
+                  <p className="mt-0.5 tabular-nums text-zinc-400">
+                    Weekday ${rates.weekday.toFixed(2)} · Weeknight ${rates.weeknight.toFixed(2)} · Sat ${rates.saturday.toFixed(2)} · Sun ${rates.sunday.toFixed(2)}
+                  </p>
+                  {calc?.bands && (
+                    <p className="mt-1.5 tabular-nums text-zinc-200">
+                      {(["weekday", "weeknight", "saturday", "sunday"] as const)
+                        .filter((b) => calc.bands![b] > 0)
+                        .map((b) => `${fmtHours(calc.bands![b])} ${b === "weekday" ? "weekday" : b === "weeknight" ? "weeknight" : b === "saturday" ? "Saturday" : "Sunday"}`)
+                        .join(" + ")}{" "}
+                      = {fmtMoney(calc.pay)} (avg ${calc.effectiveRate.toFixed(2)}/h)
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRateTouched(true);
+                      setD((prev) => ({ ...prev, useRates: false, hourlyRate: String(calc?.effectiveRate ?? rates.weekday) }));
+                    }}
+                    className="mt-2 text-[13px] font-semibold text-zinc-50 underline underline-offset-2"
+                  >
+                    Use one flat rate instead
+                  </button>
+                </div>
+              </Field>
+            ) : (
             <Field
               label="Hourly base rate (AUD)"
               error={err("hourlyRate")}
@@ -388,7 +427,13 @@ export function ShiftModal({ open, shift, defaultDate, onClose }: Props) {
                   }}
                 />
               </div>
+              {employer?.penaltyRates && (
+                <button type="button" onClick={() => setD((prev) => ({ ...prev, useRates: true }))} className="mt-1.5 pl-1 text-[13px] font-semibold text-zinc-50 underline underline-offset-2">
+                  Use award rates (weekday / night / weekend)
+                </button>
+              )}
             </Field>
+            )}
           </div>
 
           <Field label="Payment status">

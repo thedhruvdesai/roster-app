@@ -4,17 +4,27 @@ import { Pause, Pencil, Play, Plus, Repeat, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { fmtAU, isValidTime, startOfWeek, todayISO } from "@/lib/dates";
 import { calcShift, fmtHours, fmtMoney } from "@/lib/pay";
-import { resolveRate, useRoster } from "@/lib/store";
-import type { RecurringShift, Weekday } from "@/lib/types";
+import { resolveRate, resolveRates, useRoster } from "@/lib/store";
+import { addDays } from "@/lib/dates";
+import type { PenaltyRates, RecurringShift, Weekday } from "@/lib/types";
 import { cn } from "@/lib/ui";
 import { Button, EmployerBadge, Field, IconButton, Panel, inputCls } from "./ui";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-/** Weekly totals for one pattern */
-function patternWeek(r: RecurringShift, rate: number) {
-  const c = calcShift({ date: "2026-01-05", start: r.start, end: r.end, breakMins: r.breakMins, hourlyRate: rate });
-  return { hours: c.netHours * r.weekdays.length, pay: c.pay * r.weekdays.length, overnight: c.overnight };
+/** Weekly totals for one pattern. Each weekday is priced on its own so award rates (night, weekend) count. */
+function patternWeek(r: RecurringShift, rate: number, rates?: PenaltyRates) {
+  let hours = 0;
+  let pay = 0;
+  let overnight = false;
+  for (const wd of r.weekdays) {
+    // 2026-01-05 is a Monday; weekday 0 = Mon
+    const c = calcShift({ date: addDays("2026-01-05", wd), start: r.start, end: r.end, breakMins: r.breakMins, hourlyRate: rate, rates });
+    hours += c.netHours;
+    pay += c.pay;
+    overnight = c.overnight;
+  }
+  return { hours, pay, overnight };
 }
 
 export function FixedRosterPanel() {
@@ -25,7 +35,7 @@ export function FixedRosterPanel() {
     .filter((r) => r.active)
     .reduce(
       (a, r) => {
-        const w = patternWeek(r, r.hourlyRate ?? resolveRate(employers, r.employerId, r.site));
+        const w = patternWeek(r, r.hourlyRate ?? resolveRate(employers, r.employerId, r.site), r.hourlyRate == null ? resolveRates(employers, r.employerId, r.site) : undefined);
         return { hours: a.hours + w.hours, pay: a.pay + w.pay };
       },
       { hours: 0, pay: 0 }
@@ -56,7 +66,7 @@ export function FixedRosterPanel() {
           {recurring.map((r) => {
             const emp = employers.find((e) => e.id === r.employerId);
             const rate = r.hourlyRate ?? resolveRate(employers, r.employerId, r.site);
-            const w = patternWeek(r, rate);
+            const w = patternWeek(r, rate, r.hourlyRate == null ? resolveRates(employers, r.employerId, r.site) : undefined);
             return (
               <li key={r.id} className={cn("flex items-center gap-3 px-3 py-3", !r.active && "opacity-50")}>
                 <div className="min-w-0 flex-1">

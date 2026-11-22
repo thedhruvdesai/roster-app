@@ -68,7 +68,7 @@ export function ShiftCard({ shift, employer, restWarning, onEdit, onDuplicate, o
             </span>
           )}
           <span className="ml-auto font-display text-sm text-zinc-400">
-            {fmtHours(c.netHours)} at ${shift.hourlyRate.toFixed(2)}
+            {fmtHours(c.netHours)} at ${c.effectiveRate.toFixed(2)}
             {shift.breakMins ? `, ${shift.breakMins}m break` : ""}
           </span>
         </div>

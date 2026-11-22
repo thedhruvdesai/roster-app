@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { addDays, startOfWeek, todayISO } from "./dates";
-import { DEFAULT_EMPLOYERS, DEFAULT_RECURRING, JR_EMPLOYER, PSG_EMPLOYER, RETIRED_EMPLOYER_IDS, SAI_EMPLOYER } from "./mock";
+import { DEFAULT_EMPLOYERS, BORDER_RATES, DEFAULT_RECURRING, JR_EMPLOYER, PSG_EMPLOYER, RETIRED_EMPLOYER_IDS, SAI_EMPLOYER } from "./mock";
 import { calcShift } from "./pay";
 import type { Employer, ISODate, PaymentStatus, RecurringShift, Shift, WeekNote } from "./types";
 import type { ThemeId } from "./themes";
@@ -138,7 +138,9 @@ export const useRoster = create<RosterState>()(
             const key = skipKey(r.id, d);
             if (skip.has(key) || have.has(key)) continue;
             const rate = r.hourlyRate ?? resolveRate(employers, r.employerId, r.site, d);
-            const base = { date: d, start: r.start, end: r.end, breakMins: r.breakMins, hourlyRate: rate };
+            // A pattern with its own fixed rate stays flat; otherwise award rates apply if the employer has them
+            const rates = r.hourlyRate == null ? resolveRates(employers, r.employerId, r.site) : undefined;
+            const base = { date: d, start: r.start, end: r.end, breakMins: r.breakMins, hourlyRate: rate, rates };
             created.push({
               id: uid("sh"),
               employerId: r.employerId,
@@ -214,7 +216,7 @@ export const useRoster = create<RosterState>()(
     {
       // v2 key: starts fresh with real employers instead of the old demo data
       name: "shiftdesk-roster-v2",
-      version: 9,
+      version: 10,
       // Adds employers introduced after a device first saved its data, without touching anything else
       migrate: (persisted, version) => {
         const st = (persisted ?? {}) as { employers?: Employer[]; theme?: string; recurring?: RecurringShift[]; shifts?: Shift[]; skipped?: string[] };
@@ -254,6 +256,17 @@ export const useRoster = create<RosterState>()(
             .filter((e) => !gone.has(e.id) || keep.has(e.id))
             .map((e) => (gone.has(e.id) ? { ...e, archived: true } : e));
         }
+        // v10: Border Security moves to award rates (weekday/weeknight/Sat/Sun). Paid shifts stay as they were.
+        if (version < 10 && Array.isArray(st.employers)) {
+          st.employers = st.employers.map((e) =>
+            e.id === "emp_border" ? { ...e, defaultRate: BORDER_RATES.weekday, penaltyRates: BORDER_RATES } : e
+          );
+          st.shifts = (st.shifts ?? []).map((x) =>
+            x.employerId === "emp_border" && x.status !== "paid" && x.hourlyRate === 33.75
+              ? { ...x, hourlyRate: BORDER_RATES.weekday, rates: BORDER_RATES }
+              : x
+          );
+        }
         return st as RosterState;
       },
       storage: createJSONStorage(() => localStorage),
@@ -280,6 +293,14 @@ export function resolveRate(employers: Employer[], employerId: string, siteName?
   if (site?.rateOverride != null) return site.rateOverride;
   if (date && emp.weekendRate != null && isWeekend(date)) return emp.weekendRate;
   return emp.defaultRate;
+}
+
+/** Award rates for a new shift, unless the site has its own flat rate */
+export function resolveRates(employers: Employer[], employerId: string, siteName?: string) {
+  const emp = employers.find((e) => e.id === employerId);
+  if (!emp?.penaltyRates) return undefined;
+  const site = emp.sites.find((s) => s.name === siteName);
+  return site?.rateOverride != null ? undefined : emp.penaltyRates;
 }
 
 /** Saturday or Sunday (by the shift's start date) */
