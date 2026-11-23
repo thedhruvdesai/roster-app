@@ -47,6 +47,19 @@ export const RETIRED_EMPLOYER_IDS = ["emp_cityview"];
 
 export const BORDER_RATES = { weekday: 35.5, weeknight: 41.69, saturday: 49.7, sunday: 63.9 };
 
+/** Added Nov 2026: Border Mon & Wed 02:00–06:00 from the week of 14 Dec (Tue/Thu 01:30 pattern continues) */
+export const BORDER_MON_WED: RecurringShift = {
+  id: "rec_border_mon_wed",
+  employerId: "emp_border",
+  site: "Surfers City Gate Access",
+  weekdays: [0, 2], // Mon, Wed
+  start: "02:00",
+  end: "06:00",
+  breakMins: 0,
+  startDate: "2026-12-14",
+  active: true,
+};
+
 export const DEFAULT_EMPLOYERS: Employer[] = [
   {
     id: "emp_border",
@@ -122,6 +135,7 @@ export const DEFAULT_RECURRING: RecurringShift[] = [
     startDate: ROSTER_START,
     active: true,
   },
+  BORDER_MON_WED,
   {
     id: "rec_const_thu",
     employerId: "emp_constant",

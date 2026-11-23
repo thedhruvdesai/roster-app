@@ -3,7 +3,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { addDays, startOfWeek, todayISO } from "./dates";
-import { DEFAULT_EMPLOYERS, BORDER_RATES, DEFAULT_RECURRING, JR_EMPLOYER, PSG_EMPLOYER, RETIRED_EMPLOYER_IDS, SAI_EMPLOYER } from "./mock";
+import { DEFAULT_EMPLOYERS, BORDER_MON_WED, BORDER_RATES, DEFAULT_RECURRING, JR_EMPLOYER, PSG_EMPLOYER, RETIRED_EMPLOYER_IDS, SAI_EMPLOYER } from "./mock";
 import { calcShift } from "./pay";
 import type { Employer, ISODate, PaymentStatus, RecurringShift, Shift, WeekNote } from "./types";
 import type { ThemeId } from "./themes";
@@ -216,7 +216,7 @@ export const useRoster = create<RosterState>()(
     {
       // v2 key: starts fresh with real employers instead of the old demo data
       name: "shiftdesk-roster-v2",
-      version: 10,
+      version: 11,
       // Adds employers introduced after a device first saved its data, without touching anything else
       migrate: (persisted, version) => {
         const st = (persisted ?? {}) as { employers?: Employer[]; theme?: string; recurring?: RecurringShift[]; shifts?: Shift[]; skipped?: string[] };
@@ -266,6 +266,10 @@ export const useRoster = create<RosterState>()(
               ? { ...x, hourlyRate: BORDER_RATES.weekday, rates: BORDER_RATES }
               : x
           );
+        }
+        // v11: Border Mon & Wed 02:00–06:00 at Surfers City Gate Access, weekly from 14 Dec 2026
+        if (version < 11 && Array.isArray(st.recurring) && !st.recurring.some((r) => r.id === BORDER_MON_WED.id)) {
+          st.recurring = [...st.recurring, BORDER_MON_WED];
         }
         return st as RosterState;
       },
