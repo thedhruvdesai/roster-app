@@ -13,6 +13,7 @@ import {
   fmtHours,
   fmtMoney,
   shiftsInRange,
+  fmtBands,
 } from "@/lib/pay";
 import { useRoster } from "@/lib/store";
 import { addShiftToCalendar } from "@/lib/reminders";
@@ -147,7 +148,7 @@ export function SummaryMetricsBar({ onAdd, onEdit, onNav }: { onAdd: () => void;
                     <Clock3 size={18} />
                   </span>
                   <span className="flex-1 text-[14px] text-zinc-300">
-                    {fmtHours(fc.netHours)} at ${fc.effectiveRate.toFixed(2)}/h{focus.rates ? " avg" : ""}
+                    {fc.bands ? fmtBands(fc.bands) : `${fmtHours(fc.netHours)} at $${fc.effectiveRate.toFixed(2)}/h`}
                     {fc.overnight ? ", finishes next morning" : ""}
                   </span>
                 </li>

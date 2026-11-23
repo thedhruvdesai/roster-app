@@ -101,6 +101,8 @@ export interface ShiftCalc {
   effectiveRate: number;
   /** Hours in each award band, only for award-rated shifts */
   bands?: { weekday: number; weeknight: number; saturday: number; sunday: number };
+  /** Pay in each award band (sums to pay) */
+  bandPay?: { weekday: number; weeknight: number; saturday: number; sunday: number };
   overnight: boolean;
   startAt: Date;
   endAt: Date;
@@ -112,6 +114,10 @@ export interface EmployerPayLine {
   hours: number;
   /** Unique rates used across the period (for display) */
   rates: number[];
+  /** Payslip-style split for award-rated shifts: hours, rate and pay per band */
+  bands?: Record<"weekday" | "weeknight" | "saturday" | "sunday", { hours: number; rate: number; pay: number }>;
+  /** Shifts on a single flat rate for an employer that also has award-rated shifts */
+  flat?: { hours: number; pay: number };
   total: number;
   paid: number;
   pending: number;

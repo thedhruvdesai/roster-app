@@ -2,7 +2,7 @@
 
 import { AlertTriangle, CheckCircle2, Copy, Moon, Pencil, Repeat, StickyNote, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { calcShift, fmtHours, fmtMoney, isOverdueForUpdate } from "@/lib/pay";
+import { calcShift, fmtBands, fmtHours, fmtMoney, isOverdueForUpdate } from "@/lib/pay";
 import type { Employer, RestWarning, Shift } from "@/lib/types";
 import { BADGE, cn } from "@/lib/ui";
 import { EmployerBadge, IconButton, StatusPill } from "./ui";
@@ -68,7 +68,7 @@ export function ShiftCard({ shift, employer, restWarning, onEdit, onDuplicate, o
             </span>
           )}
           <span className="ml-auto font-display text-sm text-zinc-400">
-            {fmtHours(c.netHours)} at ${c.effectiveRate.toFixed(2)}
+            {c.bands ? fmtBands(c.bands) : `${fmtHours(c.netHours)} at $${c.effectiveRate.toFixed(2)}`}
             {shift.breakMins ? `, ${shift.breakMins}m break` : ""}
           </span>
         </div>

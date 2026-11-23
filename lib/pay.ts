@@ -29,6 +29,13 @@ export const fmtHours = (n: number) => `${roundHours(n).toFixed(2).replace(/\.00
  * - Break is clamped so net time never goes negative.
  */
 type Band = keyof PenaltyRates;
+export const BANDS: Band[] = ["weekday", "weeknight", "saturday", "sunday"];
+export const BAND_LABEL: Record<Band, string> = { weekday: "Weekday", weeknight: "Weeknight", saturday: "Saturday", sunday: "Sunday" };
+/** "4.50h weeknight" or "2h weeknight + 6h Saturday" */
+export const fmtBands = (bands: Record<Band, number>) =>
+  BANDS.filter((b) => bands[b] > 0)
+    .map((b) => `${fmtHours(bands[b])} ${b === "weekday" || b === "weeknight" ? b : BAND_LABEL[b]}`)
+    .join(" + ");
 
 /** Which award band a moment falls in: weekends by day, Mon–Fri split at 6am and 6pm */
 function bandAt(dow: number, minuteOfDay: number): Band {
@@ -65,12 +72,19 @@ export function calcShift(input: Pick<Shift, "date" | "start" | "end" | "breakMi
   const netHours = roundHours(netMins / 60);
   let pay: number;
   let bands: ShiftCalc["bands"];
+  let bandPay: ShiftCalc["bandPay"];
   if (input.rates && grossMins > 0) {
     // Award rates: price each band, then take the unpaid break off at the shift's average rate
     const mins = splitBands(input.date, s, e);
-    const grossPay = (Object.keys(mins) as Band[]).reduce((t, b) => t + (mins[b] / 60) * input.rates![b], 0);
-    pay = roundMoney(grossPay * (netMins / grossMins));
     const k = netMins / grossMins;
+    // Each band is priced and rounded on its own so the lines add up exactly, like a payslip
+    bandPay = {
+      weekday: roundMoney((mins.weekday / 60) * k * input.rates.weekday),
+      weeknight: roundMoney((mins.weeknight / 60) * k * input.rates.weeknight),
+      saturday: roundMoney((mins.saturday / 60) * k * input.rates.saturday),
+      sunday: roundMoney((mins.sunday / 60) * k * input.rates.sunday),
+    };
+    pay = roundMoney(bandPay.weekday + bandPay.weeknight + bandPay.saturday + bandPay.sunday);
     bands = {
       weekday: roundHours((mins.weekday / 60) * k),
       weeknight: roundHours((mins.weeknight / 60) * k),
@@ -85,7 +99,7 @@ export function calcShift(input: Pick<Shift, "date" | "start" | "end" | "breakMi
   const startAt = combine(input.date, input.start);
   const endAt = combine(overnight ? addDays(input.date, 1) : input.date, input.end);
 
-  return { grossMins, netMins, netHours, pay, effectiveRate, bands, overnight, startAt, endAt };
+  return { grossMins, netMins, netHours, pay, effectiveRate, bands, bandPay, overnight, startAt, endAt };
 }
 
 export function shiftsInRange(shifts: Shift[], from: ISODate, to: ISODate) {
@@ -150,7 +164,23 @@ export function buildPaySummary(
     line.shiftCount++;
     line.hours += c.netHours;
     line.total += c.pay;
-    if (!line.rates.includes(c.effectiveRate)) line.rates.push(c.effectiveRate);
+    if (c.bands && c.bandPay && s.rates) {
+      line.bands ??= {
+        weekday: { hours: 0, rate: s.rates.weekday, pay: 0 },
+        weeknight: { hours: 0, rate: s.rates.weeknight, pay: 0 },
+        saturday: { hours: 0, rate: s.rates.saturday, pay: 0 },
+        sunday: { hours: 0, rate: s.rates.sunday, pay: 0 },
+      };
+      for (const b of BANDS) {
+        line.bands[b].hours = roundHours(line.bands[b].hours + c.bands[b]);
+        line.bands[b].pay = roundMoney(line.bands[b].pay + c.bandPay[b]);
+      }
+      for (const r of [s.rates.weekday, s.rates.weeknight, s.rates.saturday, s.rates.sunday])
+        if (!line.rates.includes(r)) line.rates.push(r);
+    } else {
+      line.flat = { hours: roundHours((line.flat?.hours ?? 0) + c.netHours), pay: roundMoney((line.flat?.pay ?? 0) + c.pay) };
+      if (!line.rates.includes(c.effectiveRate)) line.rates.push(c.effectiveRate);
+    }
 
     summary.totalHours += c.netHours;
     summary.grossProjected += c.pay;
@@ -219,10 +249,20 @@ export function buildTimesheetText(
     const rows = list.filter((s) => s.employerId === emp.id);
     let hrs = 0;
     let pay = 0;
+    const band = { weekday: 0, weeknight: 0, saturday: 0, sunday: 0 };
+    const bandMoney = { weekday: 0, weeknight: 0, saturday: 0, sunday: 0 };
+    let anyBands = false;
     const lines = rows.map((s) => {
       const c = calcShift(s);
       hrs += c.netHours;
       pay += c.pay;
+      if (c.bands && c.bandPay) {
+        anyBands = true;
+        for (const b of BANDS) {
+          band[b] += c.bands[b];
+          bandMoney[b] += c.bandPay[b];
+        }
+      }
       const brk = s.breakMins ? `, ${s.breakMins}m break` : "";
       const money = includePay ? ` = ${fmtMoney(c.pay)}` : "";
       return `${fmtAU(s.date)} (${fmtDow(s.date)}) - ${s.start} - ${s.end}${brk} (${fmtHours(c.netHours).replace("h", " hrs")})${money}\n   ${s.site}`;
@@ -236,6 +276,15 @@ export function buildTimesheetText(
         "",
         ...lines,
         "",
+        ...(anyBands
+          ? [
+              ...BANDS.filter((b) => band[b] > 0).map(
+                (b) =>
+                  `Casual ${BAND_LABEL[b]} - ${roundHours(band[b]).toFixed(2)} hrs${includePay ? ` = ${fmtMoney(roundMoney(bandMoney[b]))}` : ""}`
+              ),
+              "",
+            ]
+          : []),
         `*Total hrs - ${roundHours(hrs).toFixed(2)}*${includePay ? `\n*Total - ${fmtMoney(roundMoney(pay))}*` : ""}`,
       ].join("\n")
     );

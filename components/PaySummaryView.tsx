@@ -21,10 +21,12 @@ import {
   fmtMoney,
   isOverdueForUpdate,
   shiftsInRange,
+  BANDS,
+  BAND_LABEL,
 } from "@/lib/pay";
 import { useRoster, fmtRates } from "@/lib/store";
 import { setStatusWithToast } from "@/lib/actions";
-import type { ISODate, PaymentStatus, Shift } from "@/lib/types";
+import type { EmployerPayLine, ISODate, PaymentStatus, Shift } from "@/lib/types";
 import { PAYMENT_STATUS_LABEL } from "@/lib/types";
 import { STATUS_STYLE, cn } from "@/lib/ui";
 import { Button, EmployerBadge, EmptyState, Panel, WeekNavigator, inputCls } from "./ui";
@@ -171,11 +173,13 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                       <div className="min-w-0">
                         <EmployerBadge employer={l.employer} />
                         <p className="mt-1 text-sm text-zinc-400">
-                          {l.shiftCount} shift{l.shiftCount === 1 ? "" : "s"}, {fmtHours(l.hours)} at {l.rates.map((r) => `$${r.toFixed(2)}`).join(" / ")}
+                          {l.shiftCount} shift{l.shiftCount === 1 ? "" : "s"}, {fmtHours(l.hours)}
+                          {l.bands ? "" : ` at ${l.rates.map((r) => `$${r.toFixed(2)}`).join(" / ")}`}
                         </p>
                       </div>
                       <p className="shrink-0 font-display text-xl font-semibold text-zinc-50">{fmtMoney(l.total)}</p>
                     </div>
+                    {l.bands && <BandBreakdown line={l} />}
                     <div className="mt-2 flex items-center justify-between gap-3">
                       <StatusBar paid={l.paid} pending={l.pending} scheduled={l.scheduled} slim />
                       <Button size="sm" variant="ghost" disabled={!workedIds.length} onClick={() => setStatusWithToast(workedIds, "paid")}>
@@ -224,10 +228,11 @@ export function PaySummaryView({ onEdit }: { onEdit: (s: Shift) => void }) {
                         <td className="px-4 py-3">
                           <EmployerBadge employer={l.employer} />
                           <p className="mt-0.5 text-xs capitalize text-zinc-500">{l.employer.payCycle} pay</p>
+                          {l.bands && <BandBreakdown line={l} />}
                         </td>
                         <td className="px-3 py-3 text-right tabular-nums text-zinc-300">{l.shiftCount}</td>
                         <td className="px-3 py-3 text-right tabular-nums text-zinc-300">{fmtHours(l.hours)}</td>
-                        <td className="px-3 py-3 text-right tabular-nums text-zinc-400">{l.rates.map((r) => `$${r.toFixed(2)}`).join(" / ")}</td>
+                        <td className="px-3 py-3 text-right tabular-nums text-zinc-400">{l.bands ? "Award" : l.rates.map((r) => `$${r.toFixed(2)}`).join(" / ")}</td>
                         <td className="px-3 py-3 text-right font-display text-lg font-semibold text-zinc-50">{fmtMoney(l.total)}</td>
                         <td className="px-3 py-3">
                           <StatusBar paid={l.paid} pending={l.pending} scheduled={l.scheduled} slim />
@@ -546,3 +551,32 @@ function ExportPanel({ from, to, note, disabled }: { from: ISODate; to: ISODate;
   );
 }
 
+
+/** Payslip-style lines: each award band with hours × rate = pay */
+function BandBreakdown({ line }: { line: EmployerPayLine }) {
+  const rows = BANDS.filter((b) => line.bands![b].hours > 0);
+  return (
+    <div className="mt-2.5 overflow-hidden rounded-xl bg-zinc-950/60 text-[13px]">
+      {rows.map((b) => {
+        const x = line.bands![b];
+        return (
+          <div key={b} className="flex items-center justify-between gap-3 px-3 py-2 [&+&]:border-t [&+&]:border-zinc-800">
+            <span className="text-zinc-300">Casual {BAND_LABEL[b]}</span>
+            <span className="ml-auto tabular-nums text-zinc-500">
+              {fmtHours(x.hours)} × ${x.rate.toFixed(2)}
+            </span>
+            <span className="w-[4.5rem] text-right font-semibold tabular-nums text-zinc-50">{fmtMoney(x.pay)}</span>
+          </div>
+        );
+      })}
+      {line.flat && line.flat.hours > 0 && (
+        <div className="flex items-center justify-between gap-3 border-t border-zinc-800 px-3 py-2">
+          <span className="text-zinc-300">Other (flat rate)</span>
+          <span className="ml-auto tabular-nums text-zinc-500">{fmtHours(line.flat.hours)}</span>
+          <span className="w-[4.5rem] text-right font-semibold tabular-nums text-zinc-50">{fmtMoney(line.flat.pay)}</span>
+        </div>
+      )}
+      {rows.length === 0 && !line.flat && <p className="px-3 py-2 text-zinc-500">No hours yet</p>}
+    </div>
+  );
+}

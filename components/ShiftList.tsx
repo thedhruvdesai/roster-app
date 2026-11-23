@@ -2,7 +2,7 @@
 
 import { AlertTriangle, ChevronRight, Moon, Plus, Repeat } from "lucide-react";
 import { fmtAU, fmtDayNum, fmtDow, todayISO } from "@/lib/dates";
-import { calcShift, fmtHours, fmtMoney } from "@/lib/pay";
+import { calcShift, fmtBands, fmtHours, fmtMoney } from "@/lib/pay";
 import type { Employer, ISODate, RestWarning, Shift } from "@/lib/types";
 import { BADGE, STATUS_STYLE, cn } from "@/lib/ui";
 import { motion } from "motion/react";
@@ -110,7 +110,7 @@ export function ShiftList({
                                 <Moon size={11} /> next day
                               </span>
                             )}
-                            <span>{fmtHours(c.netHours)}</span>
+                            <span>{c.bands ? fmtBands(c.bands) : fmtHours(c.netHours)}</span>
                             {s.recurringId && (
                               <span className="inline-flex items-center gap-0.5">
                                 <Repeat size={11} /> fixed
